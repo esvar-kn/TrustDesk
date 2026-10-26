@@ -1,0 +1,25 @@
+# Local development stack.
+# Phase 1.1 provides MongoDB only; the server and client service definitions
+# (which need their Dockerfiles) are added in the deployment phase.
+#
+#   docker compose up -d mongo      # start MongoDB in the background
+#   docker compose down             # stop it (data persists in the volume)
+#   docker compose down -v          # stop and wipe the data volume
+
+services:
+  mongo:
+    image: mongo:8
+    container_name: trustdesk-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 })']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo-data:
