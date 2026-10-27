@@ -8,6 +8,9 @@ import { validateBody } from '../middleware/validate.js';
 import Customer from '../models/Customer.js';
 import Order from '../models/Order.js';
 import Ticket from '../models/Ticket.js';
+import AgentRun from '../models/AgentRun.js';
+import { triageService } from '../services/triage/triageService.js';
+import { draftService } from '../services/drafts/draftService.js';
 
 const PROJECTION = '-_id -__v';
 
@@ -45,6 +48,27 @@ ticketsRouter.get('/:id', async (req, res) => {
     : null;
 
   res.json({ ...ticket, customer, order });
+});
+
+// POST /api/tickets/:id/triage → classify (scan + policy + model + merge).
+ticketsRouter.post('/:id/triage', async (req, res) => {
+  const result = await triageService.run(req.params.id);
+  res.json(result);
+});
+
+// POST /api/tickets/:id/draft-reply → cited draft through the guarded pipeline.
+ticketsRouter.post('/:id/draft-reply', async (req, res) => {
+  const result = await draftService.run(req.params.id);
+  res.json(result);
+});
+
+// GET /api/tickets/:id/runs → all agent-run traces for a ticket, newest first.
+ticketsRouter.get('/:id/runs', async (req, res) => {
+  const runs = await AgentRun.find({ ticket_id: req.params.id })
+    .select('-_id -__v')
+    .sort({ created_at: -1 })
+    .lean();
+  res.json(runs);
 });
 
 // POST /api/tickets → store a new ticket verbatim.

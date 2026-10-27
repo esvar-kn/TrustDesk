@@ -6,6 +6,7 @@ import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
 import { ticketsRouter } from './routes/tickets.js';
 import { documentsRouter } from './routes/documents.js';
+import { agentRunsRouter } from './routes/agentRuns.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 export function createApp() {
@@ -17,6 +18,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/tickets', ticketsRouter);
   app.use('/api/documents', documentsRouter);
+  app.use('/api/agent-runs', agentRunsRouter);
 
   // 404 for anything unmatched, then the central coded error handler (last).
   app.use(notFound);
