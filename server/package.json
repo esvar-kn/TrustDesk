@@ -12,6 +12,8 @@
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
     "eval": "node scripts/run-evals.js",
+    "bench": "node scripts/bench-nonblocking.js",
+    "report": "node scripts/write-report.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
