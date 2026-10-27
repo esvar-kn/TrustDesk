@@ -140,7 +140,7 @@ export async function run(ticketId, { provider = getProvider() } = {}) {
     token_usage: res?.usage ?? null,
   });
 
-  return { run_id, draft_id, decision: guarded.decision, draft: guarded };
+  return { run_id, draft_id, decision: guarded.decision, draft: guarded, flags };
 }
 
 export const draftService = { run };

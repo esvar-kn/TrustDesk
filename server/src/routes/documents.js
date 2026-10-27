@@ -26,6 +26,19 @@ documentsRouter.get('/search', async (req, res) => {
   res.json({ query: q, results: context, quarantined });
 });
 
+// GET /api/documents/:id → a document with its chunks (for citation snippets).
+documentsRouter.get('/:id', async (req, res) => {
+  const doc = await KnowledgeDocument.findOne({ doc_id: req.params.id })
+    .select('doc_id title audience version trust_level -_id')
+    .lean();
+  if (!doc) fail('NOT_FOUND', `Document ${req.params.id} not found`);
+  const chunks = await KbChunk.find({ doc_id: req.params.id })
+    .select('heading text -_id')
+    .sort({ chunk_id: 1 })
+    .lean();
+  res.json({ ...doc, chunks });
+});
+
 const ingestSchema = z.object({
   documents: z
     .array(
