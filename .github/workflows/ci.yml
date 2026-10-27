@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: validate · lint · test · eval · build
+    runs-on: ubuntu-latest
+
+    # MongoDB for the seed + mock eval steps. The Vitest suite uses its own
+    # in-memory mongod (mongodb-memory-server), so it does not rely on this.
+    services:
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://localhost:27017/trustdesk_ci
+      LLM_PROVIDER: mock
+      AUTH_JWT_SECRET: ci-secret
+      DEMO_AGENT_PASSWORD: ci-agent-pass
+      DEMO_MANAGER_PASSWORD: ci-manager-pass
+      # Pin the in-memory mongod so the download is deterministic and compatible
+      # with the runner image.
+      MONGOMS_VERSION: 7.0.14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1) Pack validation — the data is parseable and internally consistent.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate capstone pack
+        run: python3 scripts/validate_pack.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install server deps
+        run: npm ci
+        working-directory: server
+      - name: Install client deps
+        run: npm ci
+        working-directory: client
+
+      # 2) Lint both packages.
+      - name: Lint server
+        run: npm run lint
+        working-directory: server
+      - name: Lint client
+        run: npm run lint
+        working-directory: client
+
+      # 3) Server test suite (in-memory mongod).
+      - name: Test server
+        run: npm test
+        working-directory: server
+
+      # 4) Seed the service DB, then run the mock eval and gate on 1.0.
+      - name: Seed database
+        run: npm run seed
+        working-directory: server
+      - name: Mock eval (gate at 1.0)
+        run: npm run eval -- --provider mock --fail-under 1.0
+        working-directory: server
+
+      # 5) Client production build.
+      - name: Build client
+        run: npm run build
+        working-directory: client
