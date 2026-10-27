@@ -53,6 +53,12 @@ const schema = z.object({
   LLM_BASE_URL: z.string().url().optional(), // overrides the per-provider default below
   LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
   LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(2),
+
+  // Prompt / eval settings (used from Phase 3).
+  PROMPT_CANARY: z.string().default('trustdesk-canary'),
+  PROMPT_VERSION: z.string().default('v1'),
+  EVAL_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  MOCK_DELAY_MS: z.coerce.number().int().min(0).default(0),
 }).superRefine((val, ctx) => {
   // A real provider needs a key; mock needs nothing.
   if (val.LLM_PROVIDER !== 'mock' && !val.LLM_API_KEY) {

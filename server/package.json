@@ -11,17 +11,20 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
+    "eval": "node scripts/run-evals.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
+    "openai": "^7.43.0",
     "pino": "^9.6.0",
     "zod": "^4.0.5"
   },
