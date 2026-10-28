@@ -1,20 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Audit-first LIGHT palette — MD3 tokens from the Stitch DESIGN.md. These CSS
+ * vars re-theme the Phase-5 components that are rebuilt in 7.1–7.7; new shell
+ * components use the Tailwind token classes directly. */
 :root {
-  --bg: #0f1420;
-  --panel: #171e2e;
-  --panel-2: #1f2838;
-  --border: #2a3448;
-  --text: #e6ebf5;
-  --muted: #90a0bd;
-  --accent: #4f8cff;
-  --danger: #ff5d6c;
-  --ok: #37c978;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  color-scheme: dark;
+  --bg: #fcf9f5;
+  --panel: #ffffff;
+  --panel-2: #f4f4f1;
+  --border: #e3e3dc;
+  --text: #1c1c1a;
+  --muted: #3e4947;
+  --accent: #0e766e;
+  --danger: #ba1a1a;
+  --ok: #166534;
+  --focus-ring: #14b8a6;
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
+html { overflow-x: hidden; }
 body { margin: 0; background: var(--bg); color: var(--text); }
 button { font: inherit; cursor: pointer; }
+
+/* Deterministic keyboard focus ring (DESIGN.md: 2px solid, no blur). */
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; border-radius: 2px; }
+
+/* Icon font + monospace helper for the redesigned UI. */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  font-size: 20px;
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+  -webkit-font-feature-settings: 'liga';
+}
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.tnum { font-variant-numeric: tabular-nums; }
 
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
@@ -27,7 +52,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 .banner { border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-size: 0.9rem; }
-.banner.error { background: rgba(255, 93, 108, 0.12); color: var(--danger); border: 1px solid rgba(255, 93, 108, 0.35); }
+.banner.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
 /* Login */
 .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
@@ -54,7 +79,7 @@ button { font: inherit; cursor: pointer; }
 .workspace { padding: 20px; }
 
 /* Workspace two-pane layout */
-.ws { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 54px); }
+.ws { display: grid; grid-template-columns: 340px 1fr; height: 100%; min-height: 0; }
 .ws-queue { border-right: 1px solid var(--border); overflow-y: auto; padding: 14px; }
 .ws-detail { overflow-y: auto; padding: 16px 20px; }
 .queue-head { display: flex; align-items: baseline; gap: 8px; margin: 2px 4px 10px; }
