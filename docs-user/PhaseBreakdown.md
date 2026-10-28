@@ -1,8 +1,10 @@
 # TrustDesk — Internal Phase Breakdown
 
-Each of the 7 plan phases, split into internally sequenced sub-phases. Every sub-phase
+Each of the 8 plan phases, split into internally sequenced sub-phases. Every sub-phase
 has a mini-goal and a verification step, ordered so each is checkable before the next.
-Time estimates sum to each phase's budget from the implementation plan (~43 h total).
+Time estimates sum to each phase's budget from the implementation plan (~50.5 h total;
+Phase 7 — the frontend redesign — was added after Phase 6, and the old Phase 7
+submission work is now Phase 8).
 
 Legend: ✅ = verification / done-check.
 
@@ -251,37 +253,133 @@ Legend: ✅ = verification / done-check.
 
 ---
 
-## Phase 7 · README, Video, Submission (~5 h · Wed 4 – Thu 5 Nov)
+## Phase 7 · Frontend Redesign — Audit-First Console (~7.5 h)
+
+**Goal:** reskin and restructure the React client to the Stitch "AI Operations Console" design
+(`docs-user/stitch_trustdesk_ai_operations_console/`), with every wired behaviour and backend
+contract preserved and all widgets functional.
+**Milestone:** the full demo flow (login → triage/draft → request → approve + execute → trace →
+evals) runs end-to-end on the new UI against live Atlas, with **no** server/API change.
+
+**Design source:** 6 Stitch pages (login, agent workspace, guardrail state, approvals, AI run
+trace, evaluations) + `trustdesk/DESIGN.md` — Material-3 tokens, IBM Plex Sans + JetBrains Mono,
+a warm "audit-first" **light** theme, desktop-first 3-column workbench.
+**Build principle — "Show Your Evidence":** show real backend data. Demo-only telemetry in the
+mockups (cosine/vector similarity, p99 latency, fraud scores, SLA %, token cost,
+"Claude-3.5-Sonnet", hybrid vector RAG) is rendered as clearly-static presentation chrome or
+dropped — never faked as live. TrustDesk uses Mongo `$text`, not vectors, and a mock/real provider.
+
+### 7.0 · Design foundation & theme (~1 h)
+- Adopt Tailwind **locally** (Vite plugin / PostCSS — never the export's `cdn.tailwindcss.com`,
+  which must not ship to production) with the design's `tailwind.config` (MD3 colour tokens,
+  spacing, radius, type scale). Load IBM Plex Sans + JetBrains Mono + Material Symbols.
+- Replace the dark `index.css` theme with the new token system; app shell: fixed header,
+  sub-context bar, footer; light theme.
+- Decision alt: if Tailwind is unwanted, port the tokens into the existing hand-written CSS instead.
+- ✅ `npm run build` + `oxlint` clean; fonts/icons load; shell renders; existing pages still mount.
+
+### 7.1 · Login screen (~0.5 h)
+- Rebuild `Login.jsx` to page 1: branded card, username + password (show/hide), Sign in,
+  Agent/Manager demo-credential quick-fill cards, footer status strip (static).
+- Keep real auth: `POST /api/auth/login`, token storage, the 401 message.
+- ✅ Agent & manager log in; demo cards prefill + submit; wrong creds show the error.
+
+### 7.2 · App shell & navigation (~0.75 h)
+- Top nav Workspace / Approvals / Evaluations; user chip (name/role from the JWT); logout;
+  guardrails status chip (static); search/⌘K box wired to the queue filter (or a clearly inert stub).
+- Re-architect routing: **Approvals becomes a top-level page**; the trace moves to a slide-out
+  drawer inside Workspace (replacing the old Trace tab).
+- ✅ Nav switches views; manager-only controls stay gated; no dead links.
+
+### 7.3 · Workspace — queue + ticket detail (~1.5 h)
+- Left queue: search + status chips (All / Needs triage / Escalated / Awaiting approval) with live
+  counts; rows with category/priority badges, channel, time.
+- Center: Customer message (unchanged); AI Triage Classification (category/priority/sentiment/
+  escalate + deterministic reason, Run triage again); AI Draft Reply (body, citation chip → snippet,
+  Regenerate / Copy / Insert); Recommended Action (target/sku/reason + idempotency token + Request).
+- Right inspector: Customer Identity, Active Order, Policy SLA Validation (timeline stepper from
+  policy dates/facts), Deterministic Provenance (run id, violations, prompt version), Open Trace Drawer.
+- ✅ Triage/draft/request work end-to-end; badges reflect real triage; cosmetic-only fields marked static.
+
+### 7.4 · Guardrail / adversarial state (~0.75 h)
+- When a ticket is flagged, render the page-3 "Active Defense Isolation" treatment: SEV alert with
+  the real scanner flags (override / concealment / coupon_over_cap / exfiltration), flagged customer
+  message, Adversarial + mandatory-escalate triage, holding reply + `KB-SECURITY-001`, Action Audit
+  (blocked `issue_coupon` + escalate done), KB Provenance Isolation (verified vs quarantined docs).
+- Source: draft-response flags + `agent_runs.guardrail_results`; quarantined docs from retrieval.
+- ✅ tkt_9006/9007 show the defense view with real flags, blocked actions, quarantined KB-ADVERSARIAL-001.
+
+### 7.5 · Approvals page (~1 h)
+- Top-level Approvals: Pending Actions queue (filters; risk badge from tool `risk_level`; hold time
+  from `created_at`); detail: action header, AI reasoning/context, Action Payload Inspection table,
+  idempotency key, Policy Governance Reference + return-window timeline, Manager Authorization
+  Sign-off (decision reason + Reject / Approve & Sign → approve), Execution State stepper
+  (Requested → Approved → Executed) + Execute Action → execute, result card (replacement/refund id + status).
+- Role gating: agents read-only / awaiting; managers approve/reject/execute (no self-approval).
+- ✅ Full request→approve→execute works from Approvals; idempotency shown; replay-safe.
+
+### 7.6 · Trace drawer / AI run trace (~0.75 h)
+- Slide-out Execution Trace (page-2 compact + page-5 full): numbered steps (sanitization, retrieval
+  with chunks + quarantined count, policy verification, action boundary), telemetry (run id, latency,
+  status), View Complete Execution JSON (real `agent_runs` doc), Copy Raw Payload / Export Trace (.jsonl).
+- Steps built from `retrieved_doc_ids`, `quarantined_doc_ids`, `guardrail_results`, `tool_calls`,
+  latency, model; invented telemetry labelled static.
+- ✅ Drawer shows that ticket's real runs; JSON matches `GET /api/agent-runs/:id`; export downloads the run.
+
+### 7.7 · Evaluations page (~1 h)
+- Metric cards with pass targets; Run Evaluation (POST + poll); Adversarial & Jailbreak benchmarks
+  (eval_005/6/7 from `case_results`); Architectural Delta (baseline vs guardrail-off, from the Phase 6
+  ablations — exposed via the eval run, or presented clearly-labelled as representative); Per-Case
+  Evaluation Traces table (filter + Export CSV) from `case_results`.
+- ✅ Run eval works; cards / adversarial / per-case reflect the live run; CSV export works.
+
+### 7.8 · Polish, responsive & verify (~1 h)
+- Responsive (drawers → overlay < 1024px, stacked < 768px), focus rings, `tabular-nums`,
+  loading/empty/error states, status never by colour alone (icon + text badges).
+- Verify: `npm run build` + `oxlint` clean; key-leak grep on `client/dist`; full browser
+  click-through against live Atlas; confirm **zero** server/API/contract changes.
+- ✅ Builds/lints clean; no secrets in dist; every graded flow verified; backend untouched.
+
+**Flow:** `7.0 → 7.1 → 7.2 → 7.3`, then `7.4` / `7.5` / `7.6` / `7.7` (any order) → `7.8`.
+**Gate:** every widget that worked in Phase 5 still works on the new UI; `npm run build` +
+`oxlint` clean; no change under `server/`.
+**If behind:** ship 7.0–7.3 + 7.5 (the graded flows); 7.4 / 7.6 / 7.7 polish can be partial.
+
+> This inserts ~7.5 h of work before submission — the Phase 8 dates below may need to shift.
+
+---
+
+## Phase 8 · README, Video, Submission (~5 h · Wed 4 – Thu 5 Nov)
 
 **Goal:** a stranger can run the project from the README; the video shows every graded flow.
 
-### 7.0 · README (~1.5 h)
+### 8.0 · README (~1.5 h)
 - Setup, env vars, seeding, running, API table, running evals, architecture, design decisions,
   known limitations, added data.
 - ✅ Covers every spec-required section.
 
-### 7.1 · DESIGN.md (~0.75 h)
+### 8.1 · DESIGN.md (~0.75 h)
 - Four decision records (rules-decide, `$text` over vectors, idempotency via indexes, in-process queue).
 - ✅ Four ADRs with trade-offs.
 
-### 7.2 · Held-out tickets (~0.5 h)
+### 8.2 · Held-out tickets (~0.5 h)
 - `data/holdout/` + README note: 4 extra tickets (late-window gold goodwill, overheating-in-warranty,
   shipping-delay coupon, verified password reset); reported separately.
 - ✅ Held-out run recorded apart from the 8 graded cases.
 
-### 7.3 · Optional hosting (~1 h)
+### 8.3 · Optional hosting (~1 h)
 - Atlas M0 + Render (server) + Vercel (client); `CORS_ORIGIN` to the Vercel URL; warm before demo.
 - ✅ Hosted URL loads (optional; local Docker is primary).
 
-### 7.4 · Video (~1 h)
+### 8.4 · Video (~1 h)
 - Record 6–8 min following the plan's demo script (architecture → triage/draft → replacement + replay →
-  `tkt_9006`/`9007` adversarial → evals + ablation → tests/CI).
+  `tkt_9006`/`9007` adversarial → evals + ablation → tests/CI). Record on the **redesigned** UI.
 - ✅ Every graded flow on screen.
 
-### 7.5 · Submit (~0.25 h)
+### 8.5 · Submit (~0.25 h)
 - Repo link + video + eval report by midday 5 Nov.
 - ✅ **Final gate:** fresh clone → `cp .env.example .env && docker compose up --build` gives a working UI,
   and `npm run eval` (mock) works, following only the README, in under 10 minutes.
 
-**Flow:** `7.0 → 7.1 → 7.2` (any order), `7.3` optional, then `7.4 → 7.5`.
+**Flow:** `8.0 → 8.1 → 8.2` (any order), `8.3` optional, then `8.4 → 8.5`.
 **If behind:** skip hosting; a local recording satisfies the deliverables.

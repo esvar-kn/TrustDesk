@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-surface-variant":"#3e4947","on-tertiary-fixed-variant":"#72361c","on-secondary-container":"#006f64","primary":"#005c55","on-secondary-fixed-variant":"#005048","on-secondary":"#ffffff","on-primary-container":"#a3faef","outline-variant":"#bdc9c6","on-surface":"#1c1c1a","inverse-primary":"#7fd5cc","error":"#ba1a1a","secondary-container":"#6df5e1","on-error":"#ffffff","on-tertiary-container":"#ffe5dc","on-tertiary-fixed":"#370e00","surface":"#fcf9f5","outline":"#6e7977","on-secondary-fixed":"#00201c","secondary":"#006b5f","surface-container-highest":"#e5e2de","on-primary-fixed-variant":"#00504a","inverse-on-surface":"#f3f0ec","surface-container-lowest":"#ffffff","primary-fixed":"#9cf2e8","inverse-surface":"#31302e","secondary-fixed":"#71f8e4","tertiary-fixed":"#ffdbce","secondary-fixed-dim":"#4fdbc8","error-container":"#ffdad6","surface-tint":"#006a63","tertiary":"#7f4026","primary-container":"#0e766e","surface-dim":"#dcdad6","on-primary":"#ffffff","surface-container":"#f0edea","tertiary-container":"#9c573b","background":"#fcf9f5","surface-container-low":"#f6f3ef","surface-container-high":"#ebe8e4","surface-variant":"#e5e2de","surface-bright":"#fcf9f5","primary-fixed-dim":"#7fd5cc","on-primary-fixed":"#00201d","tertiary-fixed-dim":"#ffb599","on-error-container":"#93000a","on-tertiary":"#ffffff","on-background":"#1c1c1a"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-lg":"1rem",gutter:"1rem","space-xs":"0.25rem","space-md":"0.75rem","space-xl":"1.5rem",margin:"1.5rem","gutter-compact":"0.5rem","margin-compact":"0.75rem","space-2xl":"2rem","space-sm":"0.5rem","space-2xs":"0.125rem"},fontFamily:{"headline-xl":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"headline-md":["IBM Plex Sans"],"code-sm":["JetBrains Mono"],"body-sm":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"],"body-md":["IBM Plex Sans"],"label-sm":["IBM Plex Sans"],"code-md":["JetBrains Mono"],"body-lg":["IBM Plex Sans"],"headline-sm":["IBM Plex Sans"]},fontSize:{"headline-xl":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"600"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"500"}],"headline-md":["18px",{lineHeight:"24px",letterSpacing:"-0.005em",fontWeight:"600"}],"code-sm":["11px",{lineHeight:"14px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"16px",fontWeight:"400"}],"headline-lg":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-md":["13px",{lineHeight:"18px",fontWeight:"400"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.02em",fontWeight:"600"}],"code-md":["12px",{lineHeight:"16px",fontWeight:"400"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-sm":["15px",{lineHeight:"20px",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md"><img alt="TrustDesk Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XkOvHuIj3ltYgWvOyxKYAhNiubTwfIf8MXvfW_umzoJ5Q4R68k4Aj3SDyRkZomEaZYz5sVJJiejCRDb4OLSqgua_3knSW0jssbe2fB638rJxoCNhI2pONfHj9VwMuLeNZo95KfLtfZbKemtoGdtxW51G56epK_Av1ruyfMdGQ4DeoyWSzckv9HgejO0mhL521RzC1Dj08NTpdPIq9T50cJWIrlSuEn3ccsF-7yvPkAi7g1Ko4mFbOXeg"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">TrustDesk</span><span class="font-code-sm text-code-sm text-on-surface-variant leading-none mt-space-2xs">AI Support Operations · Audit First</span></div><nav class="flex items-center gap-space-xs ml-space-xl" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm"><a aria-current="page" class="px-space-md py-space-xs rounded-lg transition-colors bg-primary-container text-on-primary-container font-headline-sm" data-path="workspace" href="#">Workspace</a><a class="px-space-md py-space-xs rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="approvals" href="#">Approvals</a><a class="px-space-md py-space-xs rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="evaluations" href="#">Evaluations</a></nav></div><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="font-body-sm text-body-sm">Search trace & tickets</span><kbd class="px-space-xs py-space-2xs rounded bg-surface-container-highest font-code-sm text-code-sm text-on-surface">⌘K</kbd></button><div class="flex items-center gap-space-xs px-space-sm py-space-2xs rounded bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-primary"></span><span class="font-code-sm text-code-sm text-on-surface">Guardrails Active · v2.4</span></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTWsDjJ5JEssciDxqAdNHjVV3C_Wt8ak9ytE6XE4H71mQl4b66wJigBIzOyG2DATbUaZBWM0E7TV-GpCXKlvaMIrH9ugekQI_ybmIRpZsw6DbFL582kHPKWncdNN5IOzel2FBCVRpNwh29a5JZ6Gfpu6CVVpTKmVHFWDvC3HxqE26_OMJ7xvZDca3tIecxpLVO5GhZkdnKI9NGnrRR6c7TI62oWel096yKyBFBIzugahY1CuexBfk"/><div class="hidden sm:flex flex-col items-start leading-none"><span class="font-label-sm text-label-sm text-on-surface">Aisha Patel</span><span class="font-code-sm text-code-sm text-on-surface-variant mt-space-2xs">Agent</span></div></div></div></div></header><main class="w-full pt-14 bg-surface min-h-[calc(100vh-3.5rem)] flex flex-col"><div class="flex flex-col w-full relative">
+<!-- Underlying Agent Workspace Workbench (3-Column Layout visible in background context) -->
+<div class="w-full min-h-[calc(100vh-3.5rem)] flex flex-row overflow-hidden bg-surface opacity-40 pointer-events-none select-none filter blur-[0.5px]">
+<!-- Workspace Left Rail: Ticket Queue -->
+<aside class="w-72 bg-surface-container-low flex flex-col p-space-md shrink-0 gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">inbox</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Queue (Triage)</span>
+</div>
+<span class="font-code-sm text-code-sm px-space-xs py-space-2xs bg-surface-container rounded text-on-surface-variant">14 Active</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<!-- Ticket Active Item -->
+<div class="p-space-sm rounded-lg bg-surface-container-highest shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-primary font-semibold">TKT-9001</span>
+<span class="font-code-sm text-code-sm text-error bg-error-container/40 px-space-xs py-space-2xs rounded">SLA 14m</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Damaged AirPods on Arrival - Replacement</span>
+<div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm">
+<span>Aisha Rao</span>
+<span>+91 9845...</span>
+</div>
+</div>
+<!-- Inactive Ticket Items -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface-variant">TKT-9002</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">SLA 1h 22m</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate">Billing disparity on enterprise seat count</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">David K. · Acme Corp</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface-variant">TKT-9003</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">SLA 2h 45m</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface truncate">Custom webhook payload failing signature HMAC</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Marcus L. · FinTech Dev</span>
+</div>
+</div>
+</aside>
+<!-- Workspace Center Stage: Active Ticket Thread -->
+<main class="flex-1 bg-surface-container-lowest flex flex-col p-space-xl gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-lg text-headline-lg text-on-surface">TKT-9001: Replacement Request for Damaged AirPods</span>
+<span class="px-space-xs py-space-2xs bg-secondary-container/40 text-on-secondary-container rounded font-label-sm text-label-sm">In Triage</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Received via Mobile App · 28 Jun 2026 10:14 IST · High Priority</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md py-space-xs bg-surface-container-high text-on-surface rounded-lg font-body-sm text-body-sm">Transfer</button>
+<button class="px-space-md py-space-xs bg-primary text-on-primary rounded-lg font-body-sm text-body-sm">Approve Resolution</button>
+</div>
+</div>
+<!-- Customer Message Card -->
+<div class="p-space-md bg-surface-container-low rounded-xl flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">Aisha Rao (Customer)</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">10:14:12 IST</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+          "Hello, I received my shipment (Order #ORD-7721) yesterday morning, but the package was crushed and the left earbud is completely cracked and unresponsive. I would like a replacement sent out immediately. Attached are photos of the outer box damage."
+        </p>
+</div>
+<!-- Synthesized AI Suggestion Card -->
+<div class="p-space-md bg-surface-container-high/60 rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">smart_toy</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Generated Response Proposal</span>
+</div>
+<span class="font-code-sm text-code-sm text-primary font-semibold">100% Policy Grounded</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface italic">
+          "Dear Aisha, I'm truly sorry to hear that your order arrived damaged. Under our transit damage policy (§3.2), you are eligible for an immediate replacement at zero cost..."
+        </p>
+</div>
+</main>
+<!-- Workspace Right Base Placeholder -->
+<div class="w-[480px] bg-surface shrink-0"></div>
+</div>
+<!-- Ambient Backdrop Overlay -->
+<div class="fixed inset-0 top-14 bg-on-surface/10 backdrop-blur-[1px] z-30 transition-opacity"></div>
+<!-- RIGHT SLIDE-OUT TRACE DRAWER (Fixed 480px) -->
+<aside class="fixed top-14 right-0 w-[480px] h-[calc(100vh-3.5rem)] bg-surface-container-lowest shadow-2xl flex flex-col z-40 overflow-hidden transform transition-transform duration-300" id="traceDrawer">
+<!-- DRAWER HEADER -->
+<div class="px-space-xl py-space-lg bg-surface-container-low flex flex-col gap-space-sm shrink-0 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight">AI Execution Trace</h2>
+<div class="flex items-center gap-space-xs mt-space-2xs">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Trace Run ID:</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-primary-fixed/30 px-space-xs py-space-2xs rounded">run_124</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">·</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">tkt_9001</span>
+</div>
+</div>
+</div>
+<button aria-label="Close trace drawer" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="closeDrawerBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Metadata & Telemetry Strip -->
+<div class="grid grid-cols-2 gap-space-xs pt-space-xs">
+<div class="flex flex-col gap-space-2xs p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Run Type & Engine</span>
+<div class="flex items-center gap-space-xs truncate">
+<span class="font-code-sm text-code-sm font-semibold text-on-surface truncate">Claude-3.5-Sonnet</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant shrink-0">v2.4</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-2xs p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Telemetry & Status</span>
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-primary-fixed/40 px-space-xs py-space-2xs rounded flex items-center gap-space-2xs">
+<span class="material-symbols-outlined text-[13px]">timer</span> 2.4s
+            </span>
+<span class="font-code-sm text-code-sm text-on-secondary font-semibold bg-primary px-space-xs py-space-2xs rounded flex items-center gap-space-2xs">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span> Verified
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-2xs text-on-surface-variant font-code-sm text-code-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>28 Jun 2026, 10:15:22.408 IST</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Zero Non-Deterministic Drift</span>
+</div>
+</div>
+<!-- SCROLLABLE TIMELINE BODY -->
+<div class="flex-1 overflow-y-auto p-space-xl space-y-space-lg bg-surface-container-lowest">
+<!-- STEP 1: Input Scanned -->
+<div class="relative flex items-start gap-space-md group">
+<!-- Step Icon & Vertical Connector Rail -->
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center text-primary z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div class="w-0.5 h-full absolute top-8 bottom-0 bg-surface-container-highest -mb-space-lg"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">1. Input Sanitization & Security Scan</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">12ms</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs mt-space-2xs">
+<span class="font-label-sm text-label-sm px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant flex items-center gap-space-2xs">
+<span class="material-symbols-outlined text-[12px] text-primary">check</span> No adversarial flags
+            </span>
+<span class="font-label-sm text-label-sm px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant flex items-center gap-space-2xs">
+<span class="material-symbols-outlined text-[12px] text-primary">lock</span> PII Masked (SHA-256)
+            </span>
+<span class="font-code-sm text-code-sm px-space-xs py-space-2xs rounded bg-surface-container text-on-surface-variant">lang: en-US</span>
+</div>
+<details class="mt-space-xs group/details text-on-surface-variant font-code-sm text-code-sm">
+<summary class="cursor-pointer select-none font-label-sm text-label-sm text-primary hover:text-secondary flex items-center gap-space-2xs">
+<span>View Sanitized Token Sequence</span>
+<span class="material-symbols-outlined text-[14px] transition-transform group-open/details:rotate-180">expand_more</span>
+</summary>
+<div class="mt-space-xs p-space-sm bg-surface-container-highest rounded font-code-sm text-code-sm text-on-surface overflow-x-auto whitespace-pre leading-relaxed">
+[SANITIZED_STREAM]:
+"Hello, I received my shipment (Order #[REDACTED_ORD_ID]) yesterday morning, but the package was crushed and the left earbud is completely cracked... [SHA256:d8a2...3]"
+            </div>
+</details>
+</div>
+</div>
+<!-- STEP 2: Grounding Knowledge Retrieval -->
+<div class="relative flex items-start gap-space-md group">
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">find_in_page</span>
+</div>
+<div class="w-0.5 h-full absolute top-8 bottom-0 bg-surface-container-highest -mb-space-lg"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">2. Grounding Knowledge Retrieval</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">340ms</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm">
+<span>Hybrid Dense + Sparse Vector Search</span>
+<span class="text-primary font-semibold">2 Chunks Retrieved</span>
+</div>
+<!-- Retrieved Passage 1 -->
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-semibold text-primary">[KB-REFUND-001] §3.2</span>
+<span class="font-code-sm text-code-sm font-semibold text-on-secondary-container bg-secondary-container/40 px-space-xs py-space-2xs rounded">0.94 Cosine Sim</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2">
+              "Damaged on arrival protocol: Customer reporting hardware defects within 7 business days qualifies for express door-to-door replacement dispatch."
+            </p>
+</div>
+<!-- Retrieved Passage 2 -->
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-semibold text-on-surface-variant">[KB-SHIPPING-001] §1.4</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant bg-surface-container px-space-xs py-space-2xs rounded">0.88 Cosine Sim</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface line-clamp-2">
+              "Courier transit damage liability clause: Priority logistics carrier absorbs reverse return fees when exterior carton compromise is documented."
+            </p>
+</div>
+<div class="flex items-center justify-between pt-space-2xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-space-2xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span> 0 Quarantined chunks
+            </span>
+<span class="font-code-sm text-code-sm">Ranker: BGE-Reranker-Large</span>
+</div>
+</div>
+</div>
+<!-- STEP 3: Deterministic Policy Verification -->
+<div class="relative flex items-start gap-space-md group">
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">fact_check</span>
+</div>
+<div class="w-0.5 h-full absolute top-8 bottom-0 bg-surface-container-highest -mb-space-lg"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">3. Deterministic Policy Verification</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">85ms</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<!-- Rule Item 1 -->
+<div class="flex items-start gap-space-xs p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Return window eligibility</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Elapsed: 4 days ≤ Max allowance: 7 days · PASSED</span>
+</div>
+</div>
+<!-- Rule Item 2 -->
+<div class="flex items-start gap-space-xs p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Final Sale Exemption</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Item SKU `BG-AIRPODS-01` is standard warranty tier · PASSED</span>
+</div>
+</div>
+<!-- Rule Item 3 -->
+<div class="flex items-start gap-space-xs p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Account Reputation Standing</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Fraud score 0.02 < 0.15 threshold · In Good Standing</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 4: Model Generation & Formatting -->
+<div class="relative flex items-start gap-space-md group">
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+</div>
+<div class="w-0.5 h-full absolute top-8 bottom-0 bg-surface-container-highest -mb-space-lg"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">4. Model Generation & Formatting</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">1,820ms</span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs my-space-xs">
+<div class="p-space-xs bg-surface-container-lowest rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tokens Processed</span>
+<span class="font-code-sm text-code-sm font-semibold text-on-surface">142 prompt / 78 cmpl</span>
+</div>
+<div class="p-space-xs bg-surface-container-lowest rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sampling Temperature</span>
+<span class="font-code-sm text-code-sm font-semibold text-on-surface">0.20 (Audit Mode)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-primary">bolt</span>
+<span>Streaming TTFT: 184ms · Stop Reason: End of Turn</span>
+</div>
+</div>
+</div>
+<!-- STEP 5: Guardrail & Boundary Inspection -->
+<div class="relative flex items-start gap-space-md group">
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">gshield</span>
+</div>
+<div class="w-0.5 h-full absolute top-8 bottom-0 bg-surface-container-highest -mb-space-lg"></div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">5. Guardrail & Boundary Inspection</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">115ms</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[15px]">check_circle</span>
+<span>Citations valid & verbatim matched (§3.2, §1.4)</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[15px]">check_circle</span>
+<span>Zero blocked autonomous actions detected</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-primary text-[15px]">check_circle</span>
+<span>System instructions / prompt leak score: 0.00%</span>
+</div>
+<!-- Escalation Boundary Callout -->
+<div class="mt-space-2xs p-space-sm bg-tertiary-fixed/30 rounded-lg flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[16px] shrink-0 mt-0.5">rule</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-tertiary">Action Boundary Enforced</span>
+<span class="font-code-sm text-code-sm text-on-tertiary-container">
+                  `create_replacement_order` flagged for mandatory human approval. Agent Aisha Patel must confirm dispatch.
+                </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 6: Immutable Audit Log Appended -->
+<div class="relative flex items-start gap-space-md group">
+<div class="relative flex flex-col items-center shrink-0">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-primary flex items-center justify-center z-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">fingerprint</span>
+</div>
+</div>
+<div class="flex-1 bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">6. Immutable Audit Log Appended</span>
+<span class="font-code-sm text-code-sm font-semibold text-primary bg-surface-container px-space-xs py-space-2xs rounded">28ms</span>
+</div>
+<div class="p-space-xs bg-surface-container-lowest rounded-lg flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Merkle Root Node</span>
+<span class="font-code-sm text-code-sm font-semibold text-on-surface">SHA-256: 7f4a...92c1</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm pt-space-2xs">
+<span>Ledger status: Sealed</span>
+<span class="text-primary font-semibold">Node cluster #4 (Synced)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- DRAWER FOOTER: RAW JSON VIEWER & EXPORT -->
+<div class="p-space-lg bg-surface-container-low flex flex-col gap-space-md shrink-0 shadow-md">
+<!-- Collapsible Raw JSON Block -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+<div class="px-space-md py-space-xs bg-surface-container flex items-center justify-between cursor-pointer select-none" id="toggleJsonHeader">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px]">data_object</span>
+<span class="font-label-sm text-label-sm text-on-surface">View Complete Execution JSON</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-code-sm text-code-sm text-on-surface-variant">2.8 KB</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform" id="jsonExpandIcon">expand_less</span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-highest max-h-36 overflow-y-auto font-code-sm text-code-sm text-on-surface whitespace-pre leading-relaxed select-all" id="jsonContentBox">
+{
+  "run_id": "run_124",
+  "ticket_id": "tkt_9001",
+  "timestamp": "2026-06-28T10:15:22.408Z",
+  "actor": "Aisha Patel",
+  "pipeline": "customer_resolution_v2.4",
+  "model": "claude-3.5-sonnet",
+  "latency_ms": 2400,
+  "metrics": {
+    "sanitization_ms": 12,
+    "retrieval_ms": 340,
+    "deterministic_eval_ms": 85,
+    "generation_ms": 1820,
+    "guardrails_ms": 115,
+    "audit_ms": 28
+  },
+  "knowledge_grounding": [
+    { "kb_id": "KB-REFUND-001", "clause": "§3.2", "similarity": 0.9412 },
+    { "kb_id": "KB-SHIPPING-001", "clause": "§1.4", "similarity": 0.8845 }
+  ],
+  "policy_evaluations": {
+    "within_return_window": true,
+    "not_final_sale": true,
+    "good_standing": true
+  },
+  "action_enforcement": {
+    "proposed_action": "create_replacement_order",
+    "autonomous_permitted": false,
+    "human_approval_required": true
+  },
+  "audit_hash": "7f4a0c8b9195d2c2049e3bf1aa4e92c1"
+}
+        </div>
+</div>
+<!-- Action Buttons Bar -->
+<div class="flex items-center justify-between gap-space-sm pt-space-xs">
+<button class="flex-1 h-9 px-space-md rounded-lg bg-surface-container-highest hover:bg-surface-variant text-on-surface font-body-sm text-body-sm font-semibold flex items-center justify-center gap-space-xs transition-colors" id="copyJsonBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span id="copyBtnLabel">Copy Raw Payload</span>
+</button>
+<button class="flex-1 h-9 px-space-md rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold flex items-center justify-center gap-space-xs shadow-sm transition-colors" id="exportTraceBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Export Trace (.jsonl)</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<script>
+  (function initTraceDrawer() {
+    const drawer = document.getElementById('traceDrawer');
+    const closeBtn = document.getElementById('closeDrawerBtn');
+    const toggleJsonHeader = document.getElementById('toggleJsonHeader');
+    const jsonContentBox = document.getElementById('jsonContentBox');
+    const jsonExpandIcon = document.getElementById('jsonExpandIcon');
+    const copyJsonBtn = document.getElementById('copyJsonBtn');
+    const copyBtnLabel = document.getElementById('copyBtnLabel');
+    const exportTraceBtn = document.getElementById('exportTraceBtn');
+
+    // Toggle Drawer Close/Open simulation
+    if (closeBtn && drawer) {
+      closeBtn.addEventListener('click', () => {
+        drawer.classList.toggle('translate-x-full');
+      });
+    }
+
+    // Toggle JSON preview drawer expansion
+    let jsonCollapsed = false;
+    if (toggleJsonHeader && jsonContentBox && jsonExpandIcon) {
+      toggleJsonHeader.addEventListener('click', () => {
+        jsonCollapsed = !jsonCollapsed;
+        if (jsonCollapsed) {
+          jsonContentBox.classList.add('hidden');
+          jsonExpandIcon.classList.remove('rotate-180');
+          jsonExpandIcon.textContent = 'expand_more';
+        } else {
+          jsonContentBox.classList.remove('hidden');
+          jsonExpandIcon.classList.add('rotate-180');
+          jsonExpandIcon.textContent = 'expand_less';
+        }
+      });
+    }
+
+    // Copy JSON micro-interaction
+    if (copyJsonBtn && copyBtnLabel && jsonContentBox) {
+      copyJsonBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(jsonContentBox.textContent.trim()).then(() => {
+          const originalText = copyBtnLabel.textContent;
+          copyBtnLabel.textContent = 'Copied to Clipboard!';
+          copyJsonBtn.classList.add('bg-primary-fixed', 'text-on-primary-fixed');
+          setTimeout(() => {
+            copyBtnLabel.textContent = originalText;
+            copyJsonBtn.classList.remove('bg-primary-fixed', 'text-on-primary-fixed');
+          }, 2000);
+        }).catch(() => {
+          copyBtnLabel.textContent = 'Copied!';
+          setTimeout(() => { copyBtnLabel.textContent = 'Copy Raw Payload'; }, 1500);
+        });
+      });
+    }
+
+    // Export Trace JSONL simulation
+    if (exportTraceBtn && jsonContentBox) {
+      exportTraceBtn.addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonContentBox.textContent.trim());
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "run_124_trace_report.jsonl");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+    }
+  })();
+</script></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(0,0,0,0.03)] py-space-md mt-auto"><div class="max-w-7xl mx-auto px-margin flex items-center justify-between text-on-surface-variant"><div class="flex items-center gap-space-sm font-code-sm text-code-sm"><span>TrustDesk Enterprise Core</span><span>·</span><span>Deterministic Audit Engine v2.4.1</span></div><div class="font-body-sm text-body-sm">© 2025 TrustDesk Inc. Provable AI Operations.</div></div></footer></body></html>

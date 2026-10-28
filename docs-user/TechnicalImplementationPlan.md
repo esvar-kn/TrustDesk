@@ -85,9 +85,9 @@ Major versions are listed; pin exact versions from the first `npm install` via `
 
 ## 2. Phased implementation roadmap
 
-Seven phases take about 43 hours, and each ends with a gate of commands that must pass before the next phase starts. The eval runner lands in phase 3 with a mock model, so phases 4–7 can measure every change against the 8 cases.
+Eight phases take about 50.5 hours, and each ends with a gate of commands that must pass before the next phase starts. (Phase 7, a frontend redesign to the Stitch "AI Operations Console", was added after Phase 6; the original README/video/submission work is now Phase 8.) The eval runner lands in phase 3 with a mock model, so phases 4–8 can measure every change against the 8 cases.
 
-&#91;embedded content: Capstone schedule · 7 phases, 25 Oct to 5 Nov 2026\]
+&#91;embedded content: Capstone schedule · 8 phases, 25 Oct to 5 Nov 2026 (Phase 7 frontend redesign added after Phase 6; submission is now Phase 8)\]
 
 ### Repository layout
 
@@ -265,7 +265,22 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:4000/api/eval-runs -H
 
 **If behind:** keep the six adversarial and idempotency tests, cut the rest.
 
-### Phase 7 · README, video, submission (Wed 4 – Thu 5 Nov, \~5 h)
+### Phase 7 · Frontend redesign — audit-first console (\~7.5 h)
+
+**Goal:** reskin and restructure the React client to the Stitch "AI Operations Console" design in `docs-user/stitch_trustdesk_ai_operations_console/` — Material-3 tokens, IBM Plex Sans + JetBrains Mono, a warm audit-first light theme — with every wired behaviour and backend contract preserved and all widgets functional. **Milestone:** the full demo flow (login → triage/draft → request → approve + execute → trace → evals) runs end-to-end on the new UI, with no server/API change.
+
+- [ ] Theme foundation: Tailwind locally (not the export's CDN) with the design's config; fonts/icons; new app shell, light theme (7.0).
+- [ ] Rebuild login, app shell + nav (Approvals becomes a top-level page, trace becomes a drawer), workspace queue + ticket detail (7.1–7.3).
+- [ ] Guardrail/adversarial state, Approvals page, trace drawer, Evaluations page — each wired to its real endpoint (7.4–7.7).
+- [ ] Responsive + a11y polish; verify every Phase 5 widget still works, build + lint clean, no secrets in `client/dist`, zero `server/` change (7.8).
+
+**Build principle — "show your evidence":** show real backend data; demo-only telemetry in the mockups (cosine/vector similarity, p99 latency, fraud scores, SLA %, token cost, named model, hybrid vector RAG) is static presentation chrome or dropped, never faked as live — TrustDesk uses Mongo `$text`, not vectors.
+
+**Gate:** every widget that worked in Phase 5 still works on the new UI; `npm --prefix client run build` and `oxlint` are clean; nothing under `server/` changed.
+
+**If behind:** ship the graded flows (login, workspace, approvals); adversarial/trace/evals polish can be partial.
+
+### Phase 8 · README, video, submission (Wed 4 – Thu 5 Nov, \~5 h)
 
 **Goal:** a stranger can run the project from the README, and the video shows every graded flow.
 
