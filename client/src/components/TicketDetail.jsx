@@ -1,15 +1,42 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { Badges } from './Badges.jsx';
+import { Badges, Badge } from './Badges.jsx';
+import { Card, CardHead, Field, btnOutline, Banner } from './ui.jsx';
 import TriageCard from './TriageCard.jsx';
 import DraftPanel from './DraftPanel.jsx';
 import ActionPanel from './ActionPanel.jsx';
+import { SevBanner, ActionAudit, KbProvenance } from './SecurityPanels.jsx';
 
-export default function TicketDetail({ ticketId, user, onChanged }) {
+const DAY = 86_400_000;
+const fmtDate = (iso) => (iso ? new Date(iso).toISOString().slice(0, 10) : '—');
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / DAY);
+
+// Deterministic return-window timeline, computed from the order's own dates.
+function slaModel(ticket, order) {
+  if (!order) return { kind: 'none', text: 'No linked order' };
+  if (order.status === 'in_transit') return { kind: 'transit', text: 'In transit — no return window yet' };
+  if (!order.delivered_at || !order.eligible_return_until) return { kind: 'none', text: 'No return window' };
+  const windowDays = daysBetween(order.delivered_at, order.eligible_return_until);
+  const day = daysBetween(order.delivered_at, ticket.created_at);
+  const within = new Date(ticket.created_at) <= new Date(`${order.eligible_return_until}T23:59:59Z`);
+  return {
+    kind: within ? 'within' : 'elapsed',
+    text: within ? `Within return window (Day ${day} of ${windowDays})` : 'Return window elapsed',
+    nodes: [
+      { label: 'Delivered', date: order.delivered_at, state: 'done' },
+      { label: 'Ticket', date: ticket.created_at, state: within ? 'current' : 'done' },
+      { label: 'Window end', date: order.eligible_return_until, state: within ? 'future' : 'done' },
+    ],
+  };
+}
+
+export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [draftRes, setDraftRes] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [run, setRun] = useState(null); // agent-run trace, fetched when flagged
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,120 +54,185 @@ export default function TicketDetail({ ticketId, user, onChanged }) {
     load();
   }, [load]);
 
-  if (loading && !data) return <p className="muted">Loading ticket…</p>;
-  if (error) return <div className="banner error">{error}</div>;
+  // When the scanner flagged the ticket, pull the draft's agent-run trace for the
+  // denied actions and quarantined docs shown in the defense panels.
+  useEffect(() => {
+    if (draftRes?.flags?.any && draftRes.run_id) {
+      api(`/agent-runs/${draftRes.run_id}`)
+        .then(setRun)
+        .catch(() => setRun(null));
+    } else {
+      setRun(null);
+    }
+  }, [draftRes]);
+
+  if (loading && !data) return <p className="text-body-md text-on-surface-variant p-space-md">Loading ticket…</p>;
+  if (error) return <div className="p-space-md"><Banner tone="blocked">{error}</Banner></div>;
   if (!data) return null;
 
   const { customer, order } = data;
+  const sla = slaModel(data, order);
+  const flagged = Boolean(draftRes?.flags?.any);
+  const denied = run?.guardrail_results?.policy_denied || [];
+  const verified = run?.retrieved_doc_ids || draftRes?.draft?.citations || [];
+  const quarantined = run?.quarantined_doc_ids || [];
+
+  async function copyMessage() {
+    try {
+      await navigator.clipboard.writeText(data.body || '');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
 
   return (
-    <div className="detail">
-      {/* Original message */}
-      <div className="card">
-        <div className="row">
-          <strong>{data.ticket_id}</strong>
-          <Badges triage={data.triage} />
-        </div>
-        <h3 className="ticket-subject">{data.subject}</h3>
-        <blockquote className="msg">{data.body}</blockquote>
-        <p className="muted small">
-          via {data.channel || 'n/a'} · {data.created_at}
-        </p>
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-space-lg items-start">
+      {/* Center column */}
+      <div className="flex flex-col gap-space-lg min-w-0">
+        {flagged && <SevBanner flags={draftRes.flags} />}
+        <Card>
+          <div className="flex items-center justify-between gap-space-md">
+            <span className="mono text-code-md text-on-surface-variant tnum">{data.ticket_id}</span>
+            <Badges triage={data.triage} />
+          </div>
+          <h2 className="text-headline-md font-semibold mt-space-xs">{data.subject}</h2>
+          <div className="flex items-center justify-between gap-space-md mt-space-md mb-space-xs">
+            <span className="flex items-center gap-space-xs text-label-sm uppercase tracking-wide text-on-surface-variant">
+              <span className="material-symbols-outlined text-[14px]">lock</span>
+              Customer message (unchanged)
+            </span>
+            <button className={btnOutline} onClick={copyMessage}>
+              <span className="material-symbols-outlined text-[16px]">{copied ? 'done' : 'content_copy'}</span>
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+          <blockquote className="px-space-md py-space-sm rounded-md bg-surface-container-low border-l-[3px] border-outline-variant whitespace-pre-wrap leading-relaxed text-body-lg">
+            {data.body}
+          </blockquote>
+          <p className="mono text-code-sm text-on-surface-variant mt-space-sm">
+            via {data.channel || 'n/a'} · {data.created_at}
+          </p>
+        </Card>
+
+        <TriageCard
+          ticketId={data.ticket_id}
+          triage={data.triage}
+          flagged={flagged}
+          onTriaged={async () => {
+            await load();
+            onChanged?.();
+          }}
+        />
+
+        <DraftPanel ticketId={data.ticket_id} onDrafted={setDraftRes} />
+
+        <ActionPanel
+          user={user}
+          ticketId={data.ticket_id}
+          customer={customer}
+          order={order}
+          recommended={draftRes?.draft?.actions || []}
+        />
+
+        {flagged && <ActionAudit denied={denied} recommended={draftRes?.draft?.actions || []} />}
       </div>
 
-      {/* Customer + order context */}
-      <div className="detail-cols">
-        <div className="card">
-          <h3>Customer</h3>
+      {/* Right inspector */}
+      <aside className="flex flex-col gap-space-lg">
+        <Card>
+          <CardHead icon="badge" title="Customer Identity">
+            {customer &&
+              (customer.verified ? (
+                <Badge tone="safe" icon="verified">verified</Badge>
+              ) : (
+                <Badge tone="pending" icon="help">unverified</Badge>
+              ))}
+          </CardHead>
           {customer ? (
-            <div className="kv-grid">
-              <div className="kv">
-                <span className="k">Name</span>
-                <span className="v">{customer.name}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Tier</span>
-                <span className="v">
-                  <span className="badge badge-cat">{customer.tier}</span>
-                </span>
-              </div>
-              <div className="kv">
-                <span className="k">Verified</span>
-                <span className="v">
-                  <span className={`chip ${customer.verified ? 'ok' : 'warn'}`}>
-                    {customer.verified ? 'verified' : 'unverified'}
-                  </span>
-                </span>
-              </div>
-              <div className="kv">
-                <span className="k">Tags</span>
-                <span className="v muted">{(customer.tags || []).join(', ') || '—'}</span>
-              </div>
+            <div className="grid grid-cols-2 gap-space-md">
+              <Field label="Name">{customer.name}</Field>
+              <Field label="Tier">
+                <Badge tone="neutral">{customer.tier}</Badge>
+              </Field>
+              <Field label="Email" mono>{customer.email || '—'}</Field>
+              <Field label="Tags">{(customer.tags || []).join(', ') || '—'}</Field>
             </div>
           ) : (
-            <p className="muted small">No customer linked.</p>
+            <p className="text-body-sm text-on-surface-variant">No customer linked.</p>
           )}
-        </div>
+        </Card>
 
-        <div className="card">
-          <h3>Order</h3>
+        <Card>
+          <CardHead icon="package_2" title="Active Order" />
           {order ? (
-            <div className="kv-grid">
-              <div className="kv">
-                <span className="k">Order</span>
-                <span className="v">{order.order_id}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Status</span>
-                <span className="v">{order.status}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Delivered</span>
-                <span className="v">{order.delivered_at || '—'}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Return until</span>
-                <span className="v">{order.eligible_return_until || '—'}</span>
-              </div>
-              <div className="kv">
-                <span className="k">Total</span>
-                <span className="v">
-                  {order.total} {order.currency}
-                </span>
-              </div>
-              <div className="kv">
-                <span className="k">Items</span>
-                <span className="v muted">
-                  {(order.items || [])
-                    .map((i) => `${i.sku} (${i.category}${i.final_sale ? ', final sale' : ''})`)
-                    .join('; ')}
-                </span>
-              </div>
+            <div className="grid grid-cols-2 gap-space-md">
+              <Field label="Order" mono>{order.order_id}</Field>
+              <Field label="Status">{order.status}</Field>
+              <Field label="Delivered" mono>{fmtDate(order.delivered_at)}</Field>
+              <Field label="Return until" mono>{fmtDate(order.eligible_return_until)}</Field>
+              <Field label="Total" mono>{order.total} {order.currency}</Field>
+              <Field label="Items">
+                {(order.items || []).map((i) => `${i.sku}${i.final_sale ? ' (final sale)' : ''}`).join(', ') || '—'}
+              </Field>
             </div>
           ) : (
-            <p className="muted small">No order linked.</p>
+            <p className="text-body-sm text-on-surface-variant">No order linked.</p>
           )}
-        </div>
-      </div>
+        </Card>
 
-      <TriageCard
-        ticketId={data.ticket_id}
-        triage={data.triage}
-        onTriaged={async () => {
-          await load();
-          onChanged?.();
-        }}
-      />
+        <Card>
+          <CardHead icon="schedule" title="Policy SLA Validation" />
+          <div
+            className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-md text-body-md ${
+              sla.kind === 'within'
+                ? 'bg-status-safe-bg text-status-safe-fg'
+                : sla.kind === 'elapsed'
+                  ? 'bg-status-blocked-bg text-status-blocked-fg'
+                  : 'bg-surface-container-low text-on-surface-variant'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {sla.kind === 'within' ? 'check_circle' : sla.kind === 'elapsed' ? 'cancel' : 'info'}
+            </span>
+            {sla.text}
+          </div>
+          {sla.nodes && (
+            <ol className="flex items-start justify-between mt-space-md">
+              {sla.nodes.map((n, i) => (
+                <li key={i} className="flex flex-col items-center gap-space-2xs text-center flex-1">
+                  <span
+                    className={`material-symbols-outlined text-[18px] ${
+                      n.state === 'done' ? 'text-primary-container' : n.state === 'current' ? 'text-status-escalated-fg' : 'text-outline'
+                    }`}
+                  >
+                    {n.state === 'done' ? 'check_circle' : n.state === 'current' ? 'radio_button_checked' : 'radio_button_unchecked'}
+                  </span>
+                  <span className="text-label-sm text-on-surface">{n.label}</span>
+                  <span className="mono text-code-sm text-on-surface-variant">{fmtDate(n.date)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Card>
 
-      <DraftPanel ticketId={data.ticket_id} onDrafted={setDraftRes} />
+        {flagged && <KbProvenance verified={verified} quarantined={quarantined} />}
 
-      <ActionPanel
-        user={user}
-        ticketId={data.ticket_id}
-        customer={customer}
-        order={order}
-        recommended={draftRes?.draft?.actions || []}
-      />
+        <Card>
+          <CardHead icon="fingerprint" title="Deterministic Provenance" />
+          <div className="grid grid-cols-2 gap-space-md">
+            <Field label="Run ID" mono>{draftRes?.run_id || data.triage?.run_id || '—'}</Field>
+            <Field label="Decision">{draftRes?.decision || '—'}</Field>
+            <Field label="Guard violations" mono>{draftRes?.draft?.violations?.length ?? '—'}</Field>
+            <Field label="Prompt version" mono>{draftRes?.prompt_version || 'v1'}</Field>
+          </div>
+          <button className={`${btnOutline} w-full mt-space-md`} onClick={onOpenTrace}>
+            <span className="material-symbols-outlined text-[16px]">lan</span>
+            Open Trace Drawer
+          </button>
+        </Card>
+      </aside>
     </div>
   );
 }

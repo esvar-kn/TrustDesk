@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { Card, CardHead, btnPrimary, btnDanger, Field, Banner } from './ui.jsx';
+import { Badge } from './Badges.jsx';
 
-const STATUS_CLASS = {
-  approval_required: 'warn',
-  approved: 'accent',
-  executing: 'warn',
-  executed: 'ok',
-  rejected: 'danger',
-  failed: 'danger',
+const STATUS_TONE = {
+  approval_required: 'pending',
+  approved: 'escalated',
+  executing: 'pending',
+  executed: 'safe',
+  rejected: 'blocked',
+  failed: 'blocked',
 };
 
 // Deterministic idempotency key + prefilled payload for each tool.
@@ -83,29 +85,53 @@ export default function ActionPanel({ user, ticketId, customer, order, recommend
     .map((a) => a.tool_name)
     .filter((t) => t !== 'escalate_to_human' && !actions.some((a) => a.tool_name === t));
 
-  return (
-    <div className="card">
-      <div className="row">
-        <h3>Actions</h3>
-        {!isManager && <span className="muted small">Approve/execute is manager-only</span>}
-      </div>
+  const payloadRows = (tool, p) => {
+    if (tool === 'create_replacement_order')
+      return [['Target order', p.order_id], ['SKU dispatch', p.sku], ['System reason', p.reason]];
+    if (tool === 'start_refund_review')
+      return [['Target order', p.order_id], ['Amount', `${p.amount} INR`], ['System reason', p.reason]];
+    if (tool === 'issue_coupon')
+      return [['Customer', p.customer_id], ['Amount', `${p.amount} INR`], ['System reason', p.reason]];
+    return Object.entries(p)
+      .filter(([k]) => k !== 'idempotency_key')
+      .map(([k, v]) => [k.replace(/_/g, ' '), String(v)]);
+  };
 
-      {error && <div className="banner error">{error}</div>}
+  return (
+    <Card>
+      <CardHead icon="task_alt" title="Recommended Action">
+        {!isManager && <span className="text-body-sm text-on-surface-variant">Approve/execute is manager-only</span>}
+      </CardHead>
+
+      {error && <Banner tone="blocked">{error}</Banner>}
 
       {requestable.length > 0 && (
-        <div className="recommend">
-          <span className="k">Recommended — request for approval</span>
+        <div className="flex flex-col gap-space-sm">
           {requestable.map((tool) => {
             const p = buildPayload(tool, { ticketId, customer, order });
             return (
-              <div key={tool} className="rec-row">
-                <div>
-                  <strong>{tool}</strong>
-                  <div className="muted small payload">{p.idempotency_key}</div>
+              <div key={tool} className="rounded-md border border-rule bg-surface-container-low p-space-md flex flex-col gap-space-sm">
+                <div className="flex items-center justify-between gap-space-md">
+                  <span className="flex items-center gap-space-sm font-semibold text-body-lg">
+                    <span className="material-symbols-outlined text-[18px] text-primary-container">bolt</span>
+                    {tool}
+                  </span>
+                  <Badge tone="pending" icon="lock">Needs manager approval</Badge>
                 </div>
-                <button className="btn" disabled={busy === `req-${tool}`} onClick={() => request(tool)}>
-                  {busy === `req-${tool}` ? 'Requesting…' : 'Request'}
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+                  {payloadRows(tool, p).map(([k, v]) => (
+                    <Field key={k} label={k} mono>
+                      {v ?? '—'}
+                    </Field>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between gap-space-md">
+                  <span className="mono text-code-sm text-on-surface-variant truncate">idem: {p.idempotency_key}</span>
+                  <button className={btnPrimary} disabled={busy === `req-${tool}`} onClick={() => request(tool)}>
+                    <span className="material-symbols-outlined text-[16px]">verified_user</span>
+                    {busy === `req-${tool}` ? 'Requesting…' : 'Request action'}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -113,45 +139,48 @@ export default function ActionPanel({ user, ticketId, customer, order, recommend
       )}
 
       {actions.length === 0 ? (
-        <p className="muted small">No actions requested yet.</p>
+        requestable.length === 0 && (
+          <p className="text-body-md text-on-surface-variant">No actions requested yet.</p>
+        )
       ) : (
-        <ul className="action-list">
+        <ul className="flex flex-col gap-space-sm mt-space-sm">
           {actions.map((a) => (
-            <li key={a.action_id} className="action-row">
-              <div className="row">
-                <strong>{a.tool_name}</strong>
-                <span className={`chip ${STATUS_CLASS[a.status] || ''}`}>{a.status}</span>
+            <li key={a.action_id} className="rounded-md border border-rule bg-surface-container-lowest p-space-md flex flex-col gap-space-sm">
+              <div className="flex items-center justify-between gap-space-md">
+                <span className="font-semibold text-body-lg">{a.tool_name}</span>
+                <Badge tone={STATUS_TONE[a.status] || 'neutral'}>{a.status.replace(/_/g, ' ')}</Badge>
               </div>
-              <div className="muted small payload">{a.idempotency_key}</div>
+              <span className="mono text-code-sm text-on-surface-variant truncate">idem: {a.idempotency_key}</span>
               {a.result && (
-                <div className="muted small">
+                <span className="mono text-code-sm text-status-safe-fg">
                   → {a.result.replacement_id || a.result.refund_review_id || JSON.stringify(a.result)}
-                </div>
+                </span>
               )}
-              <div className="action-btns">
+              <div className="flex items-center gap-space-sm">
                 {isManager && a.status === 'approval_required' && (
                   <>
-                    <button className="btn" disabled={busy === `approved-${a.action_id}`} onClick={() => decide(a.action_id, 'approved')}>
-                      Approve
+                    <button className={btnPrimary} disabled={busy === `approved-${a.action_id}`} onClick={() => decide(a.action_id, 'approved')}>
+                      Approve &amp; Sign
                     </button>
-                    <button className="btn danger" disabled={busy === `rejected-${a.action_id}`} onClick={() => decide(a.action_id, 'rejected')}>
+                    <button className={btnDanger} disabled={busy === `rejected-${a.action_id}`} onClick={() => decide(a.action_id, 'rejected')}>
                       Reject
                     </button>
                   </>
                 )}
                 {isManager && a.status === 'approved' && (
-                  <button className="btn" disabled={busy === `exec-${a.action_id}`} onClick={() => execute(a.action_id)}>
-                    {busy === `exec-${a.action_id}` ? 'Executing…' : 'Execute'}
+                  <button className={btnPrimary} disabled={busy === `exec-${a.action_id}`} onClick={() => execute(a.action_id)}>
+                    <span className="material-symbols-outlined text-[16px]">play_arrow</span>
+                    {busy === `exec-${a.action_id}` ? 'Executing…' : 'Execute action'}
                   </button>
                 )}
                 {!isManager && a.status === 'approval_required' && (
-                  <span className="muted small">awaiting manager approval</span>
+                  <span className="text-body-sm text-on-surface-variant">Awaiting manager approval</span>
                 )}
               </div>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   );
 }

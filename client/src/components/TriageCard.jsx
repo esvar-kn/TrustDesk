@@ -1,7 +1,24 @@
 import { useState } from 'react';
 import { api } from '../api.js';
+import { Card, CardHead, btnOutline, Banner } from './ui.jsx';
 
-export default function TriageCard({ ticketId, triage, onTriaged }) {
+const PRIORITY_TEXT = {
+  low: 'text-on-surface-variant',
+  medium: 'text-on-surface',
+  high: 'text-status-pending-fg',
+  urgent: 'text-status-blocked-fg',
+};
+
+function Cell({ label, children }) {
+  return (
+    <div className="flex flex-col gap-space-2xs border-l border-rule pl-space-md first:border-l-0 first:pl-0">
+      <span className="text-label-sm uppercase tracking-wide text-on-surface-variant">{label}</span>
+      <span className="text-headline-sm font-semibold capitalize">{children}</span>
+    </div>
+  );
+}
+
+export default function TriageCard({ ticketId, triage, flagged = false, onTriaged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -19,46 +36,65 @@ export default function TriageCard({ ticketId, triage, onTriaged }) {
   }
 
   return (
-    <div className="card">
-      <div className="row">
-        <h3>Triage</h3>
-        <button className="btn" onClick={run} disabled={busy}>
-          {busy ? 'Running…' : triage ? 'Re-run triage' : 'Run triage'}
+    <Card>
+      <CardHead icon="account_tree" title="AI Triage Classification">
+        <button className={btnOutline} onClick={run} disabled={busy}>
+          <span className="material-symbols-outlined text-[16px]">refresh</span>
+          {busy ? 'Running…' : triage ? 'Run triage again' : 'Run triage'}
         </button>
-      </div>
+      </CardHead>
 
-      {error && <div className="banner error">{error}</div>}
+      {error && <Banner tone="blocked">{error}</Banner>}
 
       {!triage ? (
-        <p className="muted small">Not triaged yet — run triage to classify this ticket.</p>
+        <p className="text-body-md text-on-surface-variant">
+          Not triaged yet — run triage to classify this ticket.
+        </p>
       ) : (
         <>
-          <div className="kv-grid">
-            <div className="kv">
-              <span className="k">Category</span>
-              <span className="v">{triage.category}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Priority</span>
-              <span className={`v pri-text pri-${triage.priority}`}>{triage.priority}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Sentiment</span>
-              <span className="v">{triage.sentiment}</span>
-            </div>
-            <div className="kv">
-              <span className="k">Escalate</span>
-              <span className="v">{triage.should_escalate ? 'Yes' : 'No'}</span>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-md">
+            <Cell label="Category">{triage.category}</Cell>
+            <Cell label="Priority">
+              <span className={PRIORITY_TEXT[triage.priority] || ''}>{triage.priority}</span>
+            </Cell>
+            <Cell label="Sentiment">{triage.sentiment}</Cell>
+            <Cell label="Escalate">
+              <span
+                className={`inline-flex items-center gap-space-2xs ${
+                  triage.should_escalate ? 'text-status-escalated-fg' : 'text-on-surface'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {triage.should_escalate ? 'arrow_outward' : 'check'}
+                </span>
+                {triage.should_escalate ? (flagged ? 'Yes (Mandatory)' : 'Yes') : 'No'}
+              </span>
+            </Cell>
           </div>
-          {triage.reason_summary && <p className="reason">{triage.reason_summary}</p>}
+
+          {flagged && (
+            <p className="mt-space-md flex items-center gap-space-xs px-space-md py-space-sm rounded-md bg-status-blocked-bg text-status-blocked-fg text-body-sm">
+              <span className="material-symbols-outlined text-[16px]">rule</span>
+              Adversarial prompt pattern detected — autonomous execution suspended.
+            </p>
+          )}
+
+          {triage.reason_summary && (
+            <p className="mt-space-md px-space-md py-space-sm rounded-md bg-surface-container-low text-body-md text-on-surface-variant">
+              <span className="font-medium text-on-surface">Deterministic reason: </span>
+              {triage.reason_summary}
+            </p>
+          )}
+
           {triage.overrides?.length > 0 && (
-            <div className="overrides">
-              <span className="k">Policy overrides</span>
-              <ul>
+            <div className="mt-space-md">
+              <span className="text-label-sm uppercase tracking-wide text-on-surface-variant">
+                Policy overrides
+              </span>
+              <ul className="mt-space-xs flex flex-col gap-space-2xs">
                 {triage.overrides.map((o, i) => (
-                  <li key={i}>
-                    {o.field}: {String(o.from)} → {String(o.to)} <span className="muted">({o.reason})</span>
+                  <li key={i} className="text-body-sm mono text-on-surface-variant">
+                    {o.field}: {String(o.from)} → <span className="text-on-surface">{String(o.to)}</span> ({o.reason})
                   </li>
                 ))}
               </ul>
@@ -66,6 +102,6 @@ export default function TriageCard({ ticketId, triage, onTriaged }) {
           )}
         </>
       )}
-    </div>
+    </Card>
   );
 }

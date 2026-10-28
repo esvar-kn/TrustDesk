@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { api } from '../api.js';
+import { Card, CardHead, btnOutline, Banner } from './ui.jsx';
+import { Badge } from './Badges.jsx';
 
-const DECISION_CLASS = { answer: 'ok', escalate: 'warn', refuse: 'danger' };
+const DECISION = {
+  answer: { tone: 'safe', icon: 'check_circle' },
+  escalate: { tone: 'escalated', icon: 'arrow_outward' },
+  refuse: { tone: 'blocked', icon: 'block' },
+};
 
 export default function DraftPanel({ ticketId, onDrafted }) {
   const [res, setRes] = useState(null);
@@ -9,6 +15,7 @@ export default function DraftPanel({ ticketId, onDrafted }) {
   const [error, setError] = useState(null);
   const [cite, setCite] = useState(null);
   const [citeBusy, setCiteBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   async function run() {
     setBusy(true);
@@ -40,48 +47,89 @@ export default function DraftPanel({ ticketId, onDrafted }) {
     }
   }
 
+  async function copyReply() {
+    try {
+      await navigator.clipboard.writeText(draft.body);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
   const draft = res?.draft;
   const activeFlags = Object.entries(res?.flags || {})
     .filter(([k, v]) => v && k !== 'any')
     .map(([k]) => k);
   const guardItems = [...activeFlags, ...(draft?.violations || [])];
+  const dec = draft && (DECISION[draft.decision] || { tone: 'neutral', icon: 'description' });
+  const flagged = Boolean(res?.flags?.any);
 
   return (
-    <div className="card">
-      <div className="row">
-        <h3>Draft reply</h3>
-        <button className="btn" onClick={run} disabled={busy}>
-          {busy ? 'Drafting…' : draft ? 'Re-draft' : 'Draft reply'}
-        </button>
-      </div>
+    <Card>
+      <CardHead icon={flagged ? 'shield' : 'draft'} title={flagged ? 'AI Draft Holding Reply' : 'AI Draft Reply'}>
+        <div className="flex items-center gap-space-sm">
+          {flagged && <Badge tone="pending" icon="shield">Safe fallback mode</Badge>}
+          <Badge tone="neutral">{res?.prompt_version || 'draft.v1'}</Badge>
+          <button className={btnOutline} onClick={run} disabled={busy}>
+            <span className="material-symbols-outlined text-[16px]">autorenew</span>
+            {busy ? 'Drafting…' : draft ? 'Regenerate' : 'Draft reply'}
+          </button>
+        </div>
+      </CardHead>
 
-      {error && <div className="banner error">{error}</div>}
+      {error && <Banner tone="blocked">{error}</Banner>}
 
       {!draft ? (
-        <p className="muted small">No draft yet — generate a cited reply through the guarded pipeline.</p>
+        <p className="text-body-md text-on-surface-variant">
+          No draft yet — generate a cited reply through the guarded pipeline.
+        </p>
       ) : (
-        <>
-          <div className="row">
-            <span className={`chip decision ${DECISION_CLASS[draft.decision] || ''}`}>
+        <div className="flex flex-col gap-space-md">
+          <div className="flex items-center justify-between gap-space-md">
+            <Badge tone={dec.tone} icon={dec.icon}>
               {draft.decision}
-            </span>
+            </Badge>
+            {draft.body && (
+              <button className={btnOutline} onClick={copyReply}>
+                <span className="material-symbols-outlined text-[16px]">
+                  {copied ? 'done' : 'content_copy'}
+                </span>
+                {copied ? 'Copied' : 'Copy reply'}
+              </button>
+            )}
           </div>
 
           {guardItems.length > 0 && (
-            <div className="guard-banner">⚠ Guardrails flagged: {guardItems.join(', ')}</div>
+            <Banner tone="blocked">Guardrails flagged: {guardItems.join(', ')}</Banner>
           )}
 
-          <blockquote className="msg draft-body">{draft.body}</blockquote>
+          {flagged && (
+            <span className="inline-flex items-center gap-space-xs text-body-sm text-status-safe-fg">
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
+              Zero prompt leakage confirmed
+            </span>
+          )}
+
+          <blockquote className="px-space-md py-space-sm rounded-md bg-surface-container-low border-l-[3px] border-primary-container whitespace-pre-wrap leading-relaxed text-body-lg">
+            {draft.body}
+          </blockquote>
 
           {draft.citations?.length > 0 && (
-            <div className="cites">
-              <span className="k">Citations</span>
-              <div className="cite-chips">
+            <div className="flex flex-col gap-space-sm">
+              <span className="text-label-sm uppercase tracking-wide text-on-surface-variant">
+                Citations
+              </span>
+              <div className="flex flex-wrap gap-space-xs">
                 {draft.citations.map((id) => (
                   <button
                     key={id}
-                    className={`cite-chip${cite?.doc_id === id ? ' active' : ''}`}
                     onClick={() => toggleCite(id)}
+                    className={`mono text-code-md px-space-sm py-space-2xs rounded border transition-colors ${
+                      cite?.doc_id === id
+                        ? 'bg-primary-container text-on-primary border-primary-container'
+                        : 'bg-surface-container-low text-primary-container border-rule hover:bg-surface-container'
+                    }`}
                   >
                     {id}
                   </button>
@@ -90,37 +138,24 @@ export default function DraftPanel({ ticketId, onDrafted }) {
             </div>
           )}
 
-          {citeBusy && <p className="muted small">Loading citation…</p>}
+          {citeBusy && <p className="text-body-sm text-on-surface-variant">Loading citation…</p>}
           {cite && (
-            <div className="snippet">
-              <strong>{cite.title || cite.doc_id}</strong>
+            <div className="rounded-md bg-surface-container-low border border-rule border-l-[3px] border-l-primary-container p-space-md max-h-60 overflow-y-auto">
+              <strong className="text-body-md">{cite.title || cite.doc_id}</strong>
               {cite.error ? (
-                <p className="muted small">{cite.error}</p>
+                <p className="text-body-sm text-on-surface-variant mt-space-xs">{cite.error}</p>
               ) : (
                 (cite.chunks || []).map((c, i) => (
-                  <div key={i} className="snippet-chunk">
-                    {c.heading && <div className="snippet-head">{c.heading}</div>}
-                    <div className="muted small">{c.text}</div>
+                  <div key={i} className="mt-space-sm">
+                    {c.heading && <div className="text-body-sm font-semibold">{c.heading}</div>}
+                    <div className="text-body-sm text-on-surface-variant">{c.text}</div>
                   </div>
                 ))
               )}
             </div>
           )}
-
-          {draft.actions?.length > 0 && (
-            <div className="rec-actions">
-              <span className="k">Recommended actions</span>
-              <div className="cite-chips">
-                {draft.actions.map((a, i) => (
-                  <span key={i} className="chip" title={a.reason}>
-                    {a.tool_name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
-    </div>
+    </Card>
   );
 }
