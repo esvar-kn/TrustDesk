@@ -18,11 +18,15 @@ jobs:
         image: mongo:8
         ports:
           - 27017:27017
+        # Give mongod time to come up before the first probe (cold image pull +
+        # startup can exceed the old 10s×10 window on a loaded runner), and fall
+        # back to the legacy `mongo` shell if `mongosh` is unavailable.
         options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })' || mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
+          --health-timeout 10s
+          --health-retries 15
+          --health-start-period 40s
 
     env:
       NODE_ENV: test
