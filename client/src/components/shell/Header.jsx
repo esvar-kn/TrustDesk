@@ -1,11 +1,18 @@
 // App shell header (Phase 7.2): brand, top-level nav, a working global search
 // (⌘K focuses it), the guardrails status chip, and the signed-in user.
 import { useEffect, useRef } from 'react';
+import NotificationsBell from './NotificationsBell.jsx';
 
+// Role-scoped nav (Phase 8.10). No `roles` = visible to everyone. Security is
+// enforced server-side; this is least-privilege UX. The oversight surfaces are
+// for managers + the read-only auditor; Users is manager-only.
 const NAV = [
   { id: 'workspace', label: 'Workspace' },
   { id: 'approvals', label: 'Approvals' },
-  { id: 'evaluations', label: 'Evaluations' },
+  { id: 'incidents', label: 'Incidents', roles: ['manager', 'auditor'] },
+  { id: 'analytics', label: 'Analytics', roles: ['manager', 'auditor'] },
+  { id: 'evaluations', label: 'Evaluations', roles: ['manager', 'auditor'] },
+  { id: 'users', label: 'Users', roles: ['manager'] },
 ];
 
 function initials(name = '') {
@@ -19,14 +26,16 @@ function initials(name = '') {
   );
 }
 
-export default function Header({ user, onLogout, view, onNavigate, query, onQuery }) {
+export default function Header({ user, onLogout, view, onNavigate, query, onQuery, dark, onToggleTheme, onOpenTicket }) {
   const searchRef = useRef(null);
 
   useEffect(() => {
     function onKey(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      // Only intercept ⌘K when the search input is actually mounted (xl+);
+      // otherwise leave the shortcut to the browser.
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k' && searchRef.current) {
         e.preventDefault();
-        searchRef.current?.focus();
+        searchRef.current.focus();
       }
     }
     window.addEventListener('keydown', onKey);
@@ -35,22 +44,14 @@ export default function Header({ user, onLogout, view, onNavigate, query, onQuer
 
   return (
     <header className="sticky top-0 z-40 h-14 bg-surface/95 backdrop-blur border-b border-rule shadow-card">
-      <div className="h-full max-w-7xl mx-auto px-space-md sm:px-margin flex items-center justify-between gap-space-sm sm:gap-space-lg">
-        <div className="flex items-center gap-space-sm sm:gap-space-lg min-w-0">
-          <div className="flex items-center gap-space-md shrink-0">
-            <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary-container text-on-primary">
-              <span className="material-symbols-outlined text-[20px]">verified_user</span>
-            </span>
-            <div className="hidden sm:flex flex-col leading-none">
-              <span className="text-headline-sm font-semibold tracking-tight">TrustDesk</span>
-              <span className="mono text-code-sm text-on-surface-variant mt-space-2xs">
-                AI Support Operations · Audit First
-              </span>
-            </div>
-          </div>
+      <div className="relative h-full max-w-7xl mx-auto px-space-md sm:px-margin flex items-center justify-between gap-space-sm">
+        <div className="flex items-center gap-space-sm shrink-0">
+          <img src="/logo-128.png" alt="TrustDesk" className="h-8 w-8 rounded-lg" />
+          <span className="hidden sm:block text-headline-lg font-bold tracking-tight">TrustDesk</span>
+        </div>
 
-          <nav className="flex items-center gap-space-2xs sm:gap-space-xs">
-            {NAV.map((n) => {
+        <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-space-2xs sm:gap-space-xs">
+            {NAV.filter((n) => !n.roles || n.roles.includes(user?.role)).map((n) => {
               const active = view === n.id;
               return (
                 <button
@@ -68,28 +69,42 @@ export default function Header({ user, onLogout, view, onNavigate, query, onQuer
                 </button>
               );
             })}
-          </nav>
-        </div>
+        </nav>
 
         <div className="flex items-center gap-space-sm sm:gap-space-md shrink-0">
-          <div className="hidden md:flex items-center gap-space-sm h-9 px-space-md rounded-lg bg-surface-container-low border border-transparent focus-within:border-focus-ring focus-within:bg-surface-container-lowest transition-colors">
+          <div className="hidden xl:flex items-center gap-space-sm h-9 px-space-md rounded-lg bg-surface-container-low border border-transparent focus-within:border-focus-ring focus-within:bg-surface-container-lowest transition-colors">
             <span className="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
             <input
               ref={searchRef}
               value={query}
               onChange={(e) => onQuery(e.target.value)}
               placeholder="Search tickets, IDs, customers"
-              className="bg-transparent outline-none text-body-sm w-48 text-on-surface placeholder:text-outline"
+              className="bg-transparent outline-none text-body-sm w-44 text-on-surface placeholder:text-outline"
             />
             <kbd className="mono text-code-sm px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant">
               ⌘K
             </kbd>
           </div>
 
-          <span className="hidden lg:flex items-center gap-space-xs px-space-sm py-space-2xs rounded bg-surface-container-low">
+          <span className="hidden 2xl:flex items-center gap-space-xs px-space-sm py-space-2xs rounded bg-surface-container-low">
             <span className="h-2 w-2 rounded-full bg-primary-container" />
             <span className="mono text-code-sm text-on-surface">Guardrails Active</span>
           </span>
+
+          <NotificationsBell onOpenTicket={onOpenTicket} />
+
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            title={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+            aria-pressed={dark}
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {dark ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
 
           {user && (
             <div className="flex items-center gap-space-sm pl-space-xs">

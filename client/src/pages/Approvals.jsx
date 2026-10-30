@@ -5,7 +5,7 @@
 // the real tool-action endpoints, role-gated, with server-enforced no-self-approval.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { Card, CardHead, Field, Banner, btnPrimary, btnDanger } from '../components/ui.jsx';
+import { Card, CardHead, Field, Banner, btnPrimary, btnDanger, btnOutline } from '../components/ui.jsx';
 import { Badge } from '../components/Badges.jsx';
 
 const TOOL_TITLE = {
@@ -149,6 +149,26 @@ export default function Approvals({ user, onOpenTicket }) {
   const execute = () =>
     act('execute', () => api(`/tool-actions/${selected.action_id}/execute`, { method: 'POST' }));
 
+  // Download the deterministic, signed compliance packet for this action.
+  async function exportPacket() {
+    setBusy('export');
+    setError(null);
+    try {
+      const packet = await api(`/tool-actions/${selected.action_id}/audit-packet`);
+      const text = JSON.stringify(packet, null, 2);
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `audit-packet-${selected.action_id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const isRequester = selected && selected.requested_by === user?.username;
   const order = ticketCtx?.order;
   const withinWindow =
@@ -240,7 +260,13 @@ export default function Approvals({ user, onOpenTicket }) {
                 <Badge tone={STATUS_TONE[selected.status] || 'neutral'}>{selected.status.replace(/_/g, ' ')}</Badge>
                 <span className="mono text-code-sm text-on-surface-variant">TOOL: {selected.tool_name}</span>
               </div>
-              <h1 className="text-headline-lg font-semibold">{TOOL_TITLE[selected.tool_name] || selected.tool_name}</h1>
+              <div className="flex items-start justify-between gap-space-md">
+                <h1 className="text-headline-lg font-semibold">{TOOL_TITLE[selected.tool_name] || selected.tool_name}</h1>
+                <button className={btnOutline} onClick={exportPacket} disabled={busy === 'export'}>
+                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  {busy === 'export' ? 'Exporting…' : 'Export audit packet'}
+                </button>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-md mt-space-md">
                 <Field label="Ticket" mono>
                   <button className="text-primary-container hover:underline" onClick={() => onOpenTicket(selected.ticket_id)}>
@@ -269,7 +295,7 @@ export default function Approvals({ user, onOpenTicket }) {
                 </span>
                 <span className="flex items-center gap-space-2xs">
                   <span className="material-symbols-outlined text-[16px] text-primary-container">policy</span>
-                  Deterministic policy allowed this tool
+                  Policy allowed this tool
                 </span>
               </div>
             </Card>
@@ -294,7 +320,7 @@ export default function Approvals({ user, onOpenTicket }) {
               <div className="mt-space-md rounded-md bg-surface-container-low border border-rule p-space-md">
                 <span className="flex items-center gap-space-xs text-label-sm uppercase tracking-wide text-on-surface-variant">
                   <span className="material-symbols-outlined text-[16px]">key</span>
-                  Deterministic idempotency key
+                  Idempotency key
                 </span>
                 <div className="mono text-code-md mt-space-2xs break-all">{selected.idempotency_key}</div>
                 <p className="text-body-sm text-on-surface-variant mt-space-xs">

@@ -177,7 +177,7 @@ export default function TraceDrawer({ ticketId }) {
                 </div>
                 <span className="flex items-center gap-space-xs text-code-sm mono text-primary-container">
                   <span className="material-symbols-outlined text-[14px]">verified</span>
-                  Deterministic pipeline
+                  Verified pipeline
                 </span>
               </div>
 

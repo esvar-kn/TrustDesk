@@ -4,12 +4,13 @@ import { login } from '../api.js';
 // Demo roles. We prefill the username and focus the password — the real demo
 // passwords live in the server's .env and are never embedded in the client.
 const DEMO = [
-  { username: 'agent', label: 'Agent Demo', desc: 'L2 Tier Support', icon: 'login' },
-  { username: 'manager', label: 'Manager Demo', desc: 'Audit & Policy', icon: 'shield_person' },
+  { username: 'agent', label: 'Agent Demo', desc: 'L2 Tier Support' },
+  { username: 'manager', label: 'Manager Demo', desc: 'Audit & Policy' },
+  { username: 'auditor', label: 'Auditor Demo', desc: 'Read-only oversight' },
 ];
 
-export default function Login({ onLogin }) {
-  const [username, setUsername] = useState('agent');
+export default function Login({ onLogin, dark, onToggleTheme }) {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState(null);
@@ -45,6 +46,20 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-margin py-space-2xl gap-space-lg">
+      {onToggleTheme && (
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          title={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+          aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+          aria-pressed={dark}
+          className="fixed top-space-lg right-space-lg flex items-center justify-center h-9 w-9 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
+        >
+          <span className="material-symbols-outlined text-[18px]">
+            {dark ? 'light_mode' : 'dark_mode'}
+          </span>
+        </button>
+      )}
       <span className="flex items-center gap-space-xs px-space-md py-space-2xs rounded-full bg-surface-container text-on-surface-variant mono text-code-sm">
         <span className="h-2 w-2 rounded-full bg-primary-container" />
         TrustDesk · AI Operations Console
@@ -57,9 +72,7 @@ export default function Login({ onLogin }) {
         <div className="h-1 bg-primary-container" />
         <div className="p-space-2xl flex flex-col gap-space-lg">
           <div className="flex flex-col items-center gap-space-md text-center">
-            <span className="flex items-center justify-center h-12 w-12 rounded-lg bg-primary-container text-on-primary">
-              <span className="material-symbols-outlined text-[24px]">verified_user</span>
-            </span>
+            <img src="/logo-128.png" alt="TrustDesk" className="h-12 w-12 rounded-xl" />
             <div className="flex flex-col gap-space-2xs">
               <h1 className="text-headline-xl font-semibold tracking-tight">TrustDesk</h1>
               <p className="text-label-sm font-semibold tracking-wide text-primary-container uppercase">
@@ -67,7 +80,7 @@ export default function Login({ onLogin }) {
               </p>
             </div>
             <p className="text-body-md text-on-surface-variant max-w-[320px]">
-              Support-operations console with deterministic policy verification and human oversight.
+              Support-operations console with policy verification and human oversight.
             </p>
           </div>
 
@@ -86,7 +99,7 @@ export default function Login({ onLogin }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
-                placeholder="e.g. agent"
+                placeholder="Enter your work email or username"
               />
             </div>
           </div>
@@ -105,7 +118,7 @@ export default function Login({ onLogin }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="Enter the demo password"
+                placeholder="Enter your password"
               />
               <button
                 type="button"
@@ -141,29 +154,25 @@ export default function Login({ onLogin }) {
               <span className="text-label-sm font-semibold tracking-wide text-on-surface-variant uppercase">
                 Demo Credentials
               </span>
-              <span className="mono text-code-sm text-outline">Deterministic Auth</span>
+              <span className="mono text-code-sm text-outline">JWT session</span>
             </div>
-            <div className="grid grid-cols-2 gap-space-sm">
-              {DEMO.map((d) => (
-                <button
-                  key={d.username}
-                  type="button"
-                  onClick={() => pickRole(d.username)}
-                  className={`flex items-center justify-between gap-space-sm px-space-md py-space-sm rounded-md border text-left transition-colors ${
-                    username === d.username
-                      ? 'border-primary-container bg-surface-container'
-                      : 'border-rule bg-surface-container-low hover:bg-surface-container'
-                  }`}
-                >
-                  <span className="flex flex-col leading-tight">
-                    <span className="text-label-md font-semibold text-on-surface">{d.label}</span>
-                    <span className="text-code-sm mono text-on-surface-variant">{d.desc}</span>
-                  </span>
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
-                    {d.icon}
-                  </span>
-                </button>
-              ))}
+            <div className={fieldWrap}>
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant">badge</span>
+              <select
+                aria-label="Demo role"
+                value={DEMO.some((d) => d.username === username) ? username : ''}
+                onChange={(e) => e.target.value && pickRole(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-body-lg text-on-surface"
+              >
+                <option value="" disabled>
+                  Select a demo role…
+                </option>
+                {DEMO.map((d) => (
+                  <option key={d.username} value={d.username}>
+                    {d.label} — {d.desc}
+                  </option>
+                ))}
+              </select>
             </div>
             <p className="text-body-sm text-on-surface-variant">
               Pick a role to fill the username, then enter its demo password.
@@ -174,7 +183,7 @@ export default function Login({ onLogin }) {
 
       <div className="flex items-center gap-space-sm px-space-lg py-space-sm rounded-lg bg-surface-container text-on-surface-variant text-body-sm">
         <span className="material-symbols-outlined text-[18px] text-primary-container">verified_user</span>
-        Deterministic policy checks · Human approval gates · Guardrail pipeline
+        Policy checks · Human approval gates · Guardrail pipeline
       </div>
       <p className="mono text-code-sm text-outline">
         Policy engine: deterministic · Retrieval: MongoDB $text

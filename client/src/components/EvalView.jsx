@@ -140,7 +140,7 @@ export default function EvalView() {
               {current ? (
                 <>Run {current.eval_run_id} · {current.status}{current.provider ? ` · ${current.provider}` : ''}{busy ? ' · polling every 2s…' : ''}</>
               ) : (
-                'Run the 8-case suite through the deterministic mock provider.'
+                'Run the 8-case suite through the mock provider.'
               )}
             </p>
           </div>
