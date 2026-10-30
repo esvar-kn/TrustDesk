@@ -1,10 +1,10 @@
 # TrustDesk — Internal Phase Breakdown
 
-Each of the 8 plan phases, split into internally sequenced sub-phases. Every sub-phase
+Each plan phase, split into internally sequenced sub-phases. Every sub-phase
 has a mini-goal and a verification step, ordered so each is checkable before the next.
-Time estimates sum to each phase's budget from the implementation plan (~50.5 h total;
-Phase 7 — the frontend redesign — was added after Phase 6, and the old Phase 7
-submission work is now Phase 8).
+Phases 1–7 are implemented. **Phase 8 (feature expansion & polish)** was added after the
+redesign; it moves the README / video / submission work to **Phase 9**. (Phase 7 — the
+frontend redesign — had earlier been inserted after Phase 6.)
 
 Legend: ✅ = verification / done-check.
 
@@ -345,41 +345,165 @@ dropped — never faked as live. TrustDesk uses Mongo `$text`, not vectors, and 
 `oxlint` clean; no change under `server/`.
 **If behind:** ship 7.0–7.3 + 7.5 (the graded flows); 7.4 / 7.6 / 7.7 polish can be partial.
 
-> This inserts ~7.5 h of work before submission — the Phase 8 dates below may need to shift.
+> This inserts ~7.5 h of work before submission — the Phase 9 dates below may need to shift.
 
 ---
 
-## Phase 8 · README, Video, Submission (~5 h · Wed 4 – Thu 5 Nov)
+## Phase 8 · Feature Expansion & Polish (~15 h)
+
+**Goal:** build higher-value support-ops features and production polish on top of the shipped
+console, without weakening the audit / guardrail / idempotency guarantees from Phases 2–4.
+**Milestone:** a manager runs a ticket fully end-to-end (triage → draft → approve → execute →
+send → resolve), every SEV-1 block shows up in a cross-ticket incident view, and ops numbers
+appear on an analytics page — all from real data.
+**Constraint:** keep the Phase 7 gate — no change to policy determinism, guardrails, or
+idempotency; server/API changes are **additive only** (new endpoints, no breaking contracts).
+
+### 8.0 · Post-redesign fixes & theming (~done)
+- Rehydrate persisted drafts on ticket switch (`GET /api/tickets/:id/draft`); refresh the
+  "Awaiting approval" count after request/approve/execute; fix the header nav/search overlap at
+  mid widths.
+- Dark theme: CSS-variable token system (`:root` + `.dark`), `useTheme` hook + pre-paint no-flash
+  script, toggle in the Header and on Login.
+- Copy pass: trim "deterministic" to the technically-precise spots; "Deterministic Auth" → "JWT session".
+- Remove dead assets (`hero.png`, `react.svg`, `vite.svg`, `public/icons.svg`).
+- ✅ 77/77 server tests green; client build + `oxlint` clean; light + dark verified in the browser.
+
+### 8.1 · Conversation threads (~done)
+- Tickets hold an ordered `messages[]` thread (customer + agent turns); legacy single-message
+  tickets are treated as one synthesized customer turn, so all prior behavior is preserved.
+- `POST /api/tickets/:id/messages` appends a turn; customer turns are re-scanned through the input
+  guard, the draft reply can be appended as an agent turn, and the detail view renders the thread
+  with a per-turn flagged chip + an "Add customer reply" composer.
+- Triage, draft prompt, retrieval query, and the scanner all read the whole thread when present.
+- ✅ Verified: a 3-turn ticket drafts in context; an injection added as a later turn is re-scanned
+  and flips the draft to escalate; 77/77 server tests green; client build + lint clean.
+
+### 8.2 · Bulk triage & queue actions (~done)
+- Queue-level "Triage all untriaged (N)" button in the Workspace; iterates the existing guarded
+  per-ticket triage endpoint one at a time, with a live progress bar and a result banner
+  (`Triaged X · Y failed`, failures listed per ticket). The open ticket's triage refreshes via a
+  parent `version` bump.
+- ✅ Verified: 8 untriaged tickets classified in one action (8 triaged · 0 failed), queue badges +
+  open detail update live; a per-ticket failure would be listed, not silent. Client build + lint clean.
+
+### 8.3 · Send & resolve lifecycle (~done)
+- `POST /api/tickets/:id/send` (mock) appends the latest draft to the thread as an agent turn,
+  marks the draft `sent`, and sets `status = resolved`; `POST /api/tickets/:id/reopen` returns it to
+  `open`. The draft panel shows a "Send reply" action (→ "Sent · ticket resolved"), the ticket header
+  shows a RESOLVED badge + Reopen, the queue rows show a resolved badge, and a "Resolved" status
+  filter was added.
+- ✅ Verified: sending a draft appends the agent reply, flips the ticket to resolved (header + queue +
+  filter all update), and Reopen returns it to open. 77/77 server tests green; client build + lint clean.
+
+### 8.4 · Guardrail incident dashboard (~done)
+- `GET /api/agent-runs/incidents` ([incidentSummary.js](../server/src/services/guardrails/incidentSummary.js))
+  aggregates every agent-run into flag-type counts, blocked-tool tallies (denied tools on flagged
+  runs), repeat-offender customers (joined via ticket → customer), a per-day trend, and the recent
+  incident list. A new top-level **Incidents** page renders stat cards, bar charts, offender list,
+  trend, and a drill-through incident table (row → opens the ticket).
+- ✅ Verified: totals (12 runs / 6 flagged), flag counts, 4 blocked tools, 3 repeat offenders, and
+  tkt_9005/9006/9007 incidents all match the agent_runs data; row click opens the ticket. 77/77
+  tests green; client build + lint clean.
+
+### 8.5 · Confidence-gated escalation (~done)
+- `TriageOut` now carries a `confidence` (0–1); the triage prompt asks for it and the mock emits it
+  (0.45 for ambiguous "general", 0.9 otherwise). In `triageService`, a confidence below
+  `CONFIDENCE_THRESHOLD` (env, default 0.6) forces `should_escalate` with a `low_confidence` override
+  — layered on top of the deterministic policy escalation (gate applied only in the live triage path,
+  so eval/ablation numbers are unchanged). Confidence is stored on the ticket and shown in the triage
+  card (amber when low).
+- ✅ Verified: a benign ambiguous ticket triaged at 45% confidence auto-escalated via a `low_confidence`
+  override (no injection, no policy reason); threshold is env-configurable. 77/77 tests green; build + lint clean.
+
+### 8.6 · Compliance export (~done)
+- `GET /api/tool-actions/:id/audit-packet` ([auditPacket.js](../server/src/services/compliance/auditPacket.js))
+  bundles the action (status, idempotency key, payload, result), the approver decision + reason, the
+  ticket + conversation + triage, the draft + citations, and the policy facts (allowed/denied,
+  violations, flags, prompt version, retrieved docs) into one record signed with a sha256 over its
+  canonical form. No export-time clock, so it is byte-stable. An "Export audit packet" button on the
+  Approvals detail downloads it as JSON.
+- ✅ Verified: for an executed action the packet carries every provenance field + signature, and two
+  exports were byte-identical. 77/77 tests green; client build + lint clean.
+
+### 8.7 · Analytics page (~done)
+- `GET /api/analytics` ([summary.js](../server/src/services/analytics/summary.js)) derives ops metrics
+  from tickets / agent_runs / tool_actions / approvals: deflection rate + draft decision mix
+  (answer/escalate/refuse), triage escalation rate, resolution rate, median AI latency, median
+  approval turnaround, and tool-action outcomes. A new top-level **Analytics** page renders stat cards,
+  the decision-mix bars, and the outcomes.
+- ✅ Verified: every number reconciles with a direct query (tickets 9, resolved 1 → 11%, escalation
+  5/9 → 56%, deflection 3/6 → 50%, actions executed 1). 77/77 tests green; client build + lint clean.
+
+### 8.8 · User & role management (~done)
+- Added the **auditor** role. Manager-only CRUD at `/api/users` ([users.js](../server/src/routes/users.js)):
+  list / create (bcrypt-hashed) / change role / delete, with no self-demote or self-delete. A
+  `blockAuditorWrites` middleware makes the auditor role read-only on the tickets, tool-actions,
+  documents and eval-run routers. A new manager-only **Users** admin page manages accounts; auditor
+  write controls (triage, draft, send, add-reply, request, bulk-triage) are hidden in the UI.
+- ✅ Verified: manager created an auditor, the new user logged in, auditor reads returned 200 (ticket +
+  trace) while every write returned 403 (triage / tool-action / users); self row is protected. 77/77
+  tests green; build + lint clean.
+
+### 8.9 · Platform polish (~done)
+- **Escalation notifications**: a `notifications` collection + `emitEscalation` (deduped per unread
+  ticket) fires on triage escalation and logs a mock Slack/email send; `/api/notifications` serves the
+  human-review queue, surfaced as a header bell with an unread count, dropdown, drill-through and
+  mark-read.
+- **Queue pagination**: the workspace queue renders one 50-row page at a time with a "Show more"
+  control, so the DOM stays small for large queues (500+).
+- **Accessibility**: trace drawer is a focus-trapped `role="dialog"` that closes on Escape; bulk-triage
+  status uses `role="status"` / `aria-live`; the queue supports arrow-key navigation.
+- ✅ Verified: triaging the adversarial tickets emitted two escalation notifications (bell → 2, then 1
+  after opening one, which drilled through to the ticket); pagination + a11y wired; 77/77 tests green;
+  build + lint clean.
+- Deferred: full self-hosting of the web/icon fonts. Text already falls back to system fonts offline;
+  bundling the Google Fonts woff2 + Material Symbols for a fully offline render is the one remaining item.
+
+### 8.10 · Role-scoped navigation (~done)
+- Nav is scoped to each role (UX / least-privilege; security is already enforced server-side): agents
+  see Workspace + Approvals; managers see everything; auditors see the read-only oversight surfaces
+  (Workspace, Approvals, Incidents, Analytics, Evaluations) but not Users. The `NAV` roles filter plus
+  an `effectiveView` guard in `App` fall back to Workspace if a role lands on a view it can't see.
+- ✅ Verified: agent nav shows only Workspace + Approvals; auditor hides Users; manager sees all.
+
+**Flow:** `8.0` (done) → `8.1`–`8.3` (any order); dashboards `8.4` / `8.7` after their data producers;
+`8.5` / `8.6` / `8.8` / `8.9` independent; `8.10` after the pages exist.
+**If behind:** ship `8.1`–`8.4` (user-facing work + the audit differentiator); `8.5`–`8.9` are additive.
+
+---
+
+## Phase 9 · README, Video, Submission (~5 h · Wed 4 – Thu 5 Nov)
 
 **Goal:** a stranger can run the project from the README; the video shows every graded flow.
 
-### 8.0 · README (~1.5 h)
+### 9.0 · README (~1.5 h)
 - Setup, env vars, seeding, running, API table, running evals, architecture, design decisions,
   known limitations, added data.
 - ✅ Covers every spec-required section.
 
-### 8.1 · DESIGN.md (~0.75 h)
+### 9.1 · DESIGN.md (~0.75 h)
 - Four decision records (rules-decide, `$text` over vectors, idempotency via indexes, in-process queue).
 - ✅ Four ADRs with trade-offs.
 
-### 8.2 · Held-out tickets (~0.5 h)
+### 9.2 · Held-out tickets (~0.5 h)
 - `data/holdout/` + README note: 4 extra tickets (late-window gold goodwill, overheating-in-warranty,
   shipping-delay coupon, verified password reset); reported separately.
 - ✅ Held-out run recorded apart from the 8 graded cases.
 
-### 8.3 · Optional hosting (~1 h)
+### 9.3 · Optional hosting (~1 h)
 - Atlas M0 + Render (server) + Vercel (client); `CORS_ORIGIN` to the Vercel URL; warm before demo.
 - ✅ Hosted URL loads (optional; local Docker is primary).
 
-### 8.4 · Video (~1 h)
+### 9.4 · Video (~1 h)
 - Record 6–8 min following the plan's demo script (architecture → triage/draft → replacement + replay →
   `tkt_9006`/`9007` adversarial → evals + ablation → tests/CI). Record on the **redesigned** UI.
 - ✅ Every graded flow on screen.
 
-### 8.5 · Submit (~0.25 h)
+### 9.5 · Submit (~0.25 h)
 - Repo link + video + eval report by midday 5 Nov.
 - ✅ **Final gate:** fresh clone → `cp .env.example .env && docker compose up --build` gives a working UI,
   and `npm run eval` (mock) works, following only the README, in under 10 minutes.
 
-**Flow:** `8.0 → 8.1 → 8.2` (any order), `8.3` optional, then `8.4 → 8.5`.
+**Flow:** `9.0 → 9.1 → 9.2` (any order), `9.3` optional, then `9.4 → 9.5`.
 **If behind:** skip hosting; a local recording satisfies the deliverables.
