@@ -97,6 +97,10 @@ async function seed() {
     { username: 'agent', role: 'agent', password: env.DEMO_AGENT_PASSWORD },
     { username: 'manager', role: 'manager', password: env.DEMO_MANAGER_PASSWORD },
   ];
+  // Optional read-only auditor demo account (seeded only when a password is set).
+  if (env.DEMO_AUDITOR_PASSWORD) {
+    userSpecs.push({ username: 'auditor', role: 'auditor', password: env.DEMO_AUDITOR_PASSWORD });
+  }
   const users = await Promise.all(
     userSpecs.map(async ({ username, role, password }) => ({
       username,

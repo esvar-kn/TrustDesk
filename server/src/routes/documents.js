@@ -3,7 +3,7 @@ import { z } from 'zod';
 import crypto from 'node:crypto';
 
 import { fail } from '../errors.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { search, resetCategoryDocMap } from '../services/retrieval/retriever.js';
 import { parseKbContent, trustLevelFor } from '../seed/parseKb.js';
@@ -12,6 +12,7 @@ import KbChunk from '../models/KbChunk.js';
 
 export const documentsRouter = Router();
 documentsRouter.use(requireAuth);
+documentsRouter.use(blockAuditorWrites);
 
 // GET /api/documents/search?q=&k=&categoryHint=
 // Returns ranked trusted results; untrusted matches are reported separately as

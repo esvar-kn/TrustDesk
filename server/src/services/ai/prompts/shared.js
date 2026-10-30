@@ -14,6 +14,23 @@ export function tag(name, content) {
   return `<${name}>\n${content}\n</${name}>`;
 }
 
+// Build the escaped content for the <customer_message> block. For a legacy
+// single-message ticket this is byte-identical to the old `subject\nbody`; for a
+// conversation (Phase 8.1) it renders the whole transcript, each turn labelled,
+// all of it escaped so no turn can forge or close a tag.
+export function customerMessageContent(ticket = {}) {
+  const subject = ticket.subject || '';
+  const msgs = Array.isArray(ticket.messages) ? ticket.messages.filter((m) => m && m.body) : [];
+  if (!msgs.length) {
+    return escapeData(`${subject}\n${ticket.body || ''}`.trim());
+  }
+  const lines = [
+    subject,
+    ...msgs.map((m) => `${m.role === 'agent' ? 'Agent' : 'Customer'}: ${m.body}`),
+  ].filter(Boolean);
+  return escapeData(lines.join('\n').trim());
+}
+
 export function policyDoc(id, content) {
   return `<policy_doc id="${id}">\n${content}\n</policy_doc>`;
 }

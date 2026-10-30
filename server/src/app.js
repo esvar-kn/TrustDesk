@@ -9,6 +9,9 @@ import { documentsRouter } from './routes/documents.js';
 import { agentRunsRouter } from './routes/agentRuns.js';
 import { toolActionsRouter } from './routes/toolActions.js';
 import { evalRunsRouter } from './routes/evalRuns.js';
+import { analyticsRouter } from './routes/analytics.js';
+import { usersRouter } from './routes/users.js';
+import { notificationsRouter } from './routes/notifications.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 export function createApp() {
@@ -23,6 +26,9 @@ export function createApp() {
   app.use('/api/agent-runs', agentRunsRouter);
   app.use('/api/tool-actions', toolActionsRouter);
   app.use('/api/eval-runs', evalRunsRouter);
+  app.use('/api/analytics', analyticsRouter);
+  app.use('/api/users', usersRouter);
+  app.use('/api/notifications', notificationsRouter);
 
   // 404 for anything unmatched, then the central coded error handler (last).
   app.use(notFound);

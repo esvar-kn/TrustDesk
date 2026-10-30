@@ -7,6 +7,9 @@ export const TriageOut = z.object({
   priority: z.enum(['low', 'medium', 'high', 'urgent']),
   sentiment: z.enum(['positive', 'neutral', 'frustrated', 'worried', 'angry']),
   should_escalate: z.boolean(),
+  // Model self-reported confidence in this classification (Phase 8.5). Optional so
+  // older outputs still validate; a value below CONFIDENCE_THRESHOLD forces escalate.
+  confidence: z.number().min(0).max(1).default(0.9),
   reason_summary: z.string().max(300),
 });
 

@@ -5,7 +5,7 @@ import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { fail } from '../errors.js';
 import { newId } from '../services/ids.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { enqueue } from '../jobs/jobQueue.js';
 import { runEval } from '../services/evals/evalRunner.js';
@@ -13,6 +13,7 @@ import EvalRun from '../models/EvalRun.js';
 
 export const evalRunsRouter = Router();
 evalRunsRouter.use(requireAuth);
+evalRunsRouter.use(blockAuditorWrites);
 
 const startSchema = z.object({
   provider: z.enum(['anthropic', 'openai', 'google', 'groq', 'mock']).optional(),

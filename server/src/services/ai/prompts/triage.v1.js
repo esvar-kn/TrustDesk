@@ -1,5 +1,5 @@
 // Triage prompt (v1): classify category, priority, sentiment, escalation.
-import { safetyPreamble, tag, escapeData, factsForPrompt } from './shared.js';
+import { safetyPreamble, tag, customerMessageContent, factsForPrompt } from './shared.js';
 
 export const VERSION = 'triage.v1';
 
@@ -24,12 +24,13 @@ export function buildTriagePrompt({ ticket, policy = {}, flags = {} } = {}) {
     SENTIMENTS,
     PRIORITY_RUBRIC,
     '',
-    'Output JSON: { "category", "priority", "sentiment", "should_escalate": boolean, "reason_summary": string }.',
+    'Report a confidence between 0 and 1 for how sure you are of this classification.',
+    'Output JSON: { "category", "priority", "sentiment", "should_escalate": boolean, "confidence": number, "reason_summary": string }.',
   ].join('\n');
 
   const user = [
     tag('facts', JSON.stringify(factsForPrompt(policy))),
-    tag('customer_message', escapeData(`${ticket.subject || ''}\n${ticket.body || ''}`.trim())),
+    tag('customer_message', customerMessageContent(ticket)),
     tag('scanner_flags', JSON.stringify(flags)),
   ].join('\n\n');
 

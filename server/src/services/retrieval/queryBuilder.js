@@ -14,9 +14,16 @@ const FINAL_SALE_CATEGORIES = ['software', 'gift_card'];
 export function buildQuery({ ticket, customer, order } = {}) {
   const parts = [];
 
-  // Customer text — search tokens only.
+  // Customer text — search tokens only. For a conversation (Phase 8.1) use every
+  // customer turn so retrieval follows the latest question; legacy tickets use body.
   if (ticket?.subject) parts.push(ticket.subject);
-  if (ticket?.body) parts.push(ticket.body);
+  const turns =
+    Array.isArray(ticket?.messages) && ticket.messages.length
+      ? ticket.messages.filter((m) => m?.role === 'customer').map((m) => m.body)
+      : ticket?.body
+        ? [ticket.body]
+        : [];
+  for (const t of turns) if (t) parts.push(t);
 
   if (order) {
     const items = order.items || [];

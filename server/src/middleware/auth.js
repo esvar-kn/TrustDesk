@@ -25,3 +25,13 @@ export function requireRole(role) {
     return next();
   };
 }
+
+// Read-only guard (Phase 8.8): the auditor role may read but never mutate. Use
+// after requireAuth on routers that expose write endpoints.
+export function blockAuditorWrites(req, _res, next) {
+  const method = (req.method || 'GET').toUpperCase();
+  if (req.user?.role === 'auditor' && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    return next(new AppError('FORBIDDEN', 'Auditor role is read-only'));
+  }
+  return next();
+}

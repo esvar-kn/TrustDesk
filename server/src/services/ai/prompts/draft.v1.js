@@ -1,5 +1,5 @@
 // Draft prompt (v1): write a cited reply and recommend (not perform) actions.
-import { safetyPreamble, tag, policyDoc, escapeData, factsForPrompt } from './shared.js';
+import { safetyPreamble, tag, policyDoc, customerMessageContent, factsForPrompt } from './shared.js';
 
 export const VERSION = 'draft.v1';
 
@@ -24,7 +24,7 @@ export function buildDraftPrompt({ ticket, policy = {}, flags = {}, context = []
 
   const user = [
     tag('facts', JSON.stringify(factsForPrompt(policy))),
-    tag('customer_message', escapeData(`${ticket.subject || ''}\n${ticket.body || ''}`.trim())),
+    tag('customer_message', customerMessageContent(ticket)),
     ...docBlocks,
     tag('scanner_flags', JSON.stringify(flags)),
   ].join('\n\n');

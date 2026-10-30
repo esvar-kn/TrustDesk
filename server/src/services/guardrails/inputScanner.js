@@ -19,7 +19,15 @@ export function scanInput(text, { couponCap = DEFAULT_COUPON_CAP } = {}) {
   return flags;
 }
 
-// Convenience: scan a ticket's customer text.
+// Convenience: scan a ticket's customer text. For a conversation (Phase 8.1) this
+// scans every customer turn, so an injection planted in any follow-up is caught;
+// a legacy single-message ticket falls back to subject + body (unchanged).
 export function scanTicket(ticket, opts) {
-  return scanInput(`${ticket?.subject || ''}\n${ticket?.body || ''}`, opts);
+  const subject = ticket?.subject || '';
+  const msgs = Array.isArray(ticket?.messages) ? ticket.messages : [];
+  const customerTurns = msgs.filter((m) => m?.role === 'customer').map((m) => m.body);
+  const text = customerTurns.length
+    ? `${subject}\n${customerTurns.join('\n')}`
+    : `${subject}\n${ticket?.body || ''}`;
+  return scanInput(text, opts);
 }

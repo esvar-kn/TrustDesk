@@ -14,6 +14,7 @@ import { evaluate, mergeTriage } from '../policy/policyEngine.js';
 import { buildTriagePrompt, VERSION } from '../ai/prompts/triage.v1.js';
 import { getProvider } from '../ai/provider.js';
 import { TriageOut } from '../ai/schemas.js';
+import { notifier } from '../notifications/notify.js';
 
 async function writeRun(fields) {
   return AgentRun.create({ run_type: 'triage', created_at: new Date(), ...fields });
@@ -64,19 +65,36 @@ export async function run(ticketId, { provider = getProvider() } = {}) {
   const model = res.json;
   const merged = mergeTriage(model, policy);
 
+  // Confidence gate (Phase 8.5): a low-confidence classification forces escalate,
+  // on top of the deterministic policy escalation (policy can still only add).
+  const confidence = typeof model.confidence === 'number' ? model.confidence : 1;
+  const lowConfidence = confidence < env.CONFIDENCE_THRESHOLD;
+  const should_escalate = merged.should_escalate || lowConfidence;
+  const overrides = [...merged.overrides];
+  if (lowConfidence && !merged.should_escalate) {
+    overrides.push({ field: 'should_escalate', from: false, to: true, reason: 'low_confidence' });
+  }
+
   const triage = {
     category: merged.category,
     priority: merged.priority,
     sentiment: model.sentiment,
-    should_escalate: merged.should_escalate,
+    should_escalate,
+    confidence,
     reason_summary: model.reason_summary,
     run_id,
-    overrides: merged.overrides,
+    overrides,
   };
   ticket.triage = triage;
   await ticket.save();
 
-  const status = merged.should_escalate ? 'escalated' : 'succeeded';
+  // Notify the human-review queue when the ticket escalates (Phase 8.9).
+  if (should_escalate) {
+    const escReason = overrides.find((o) => o.field === 'should_escalate')?.reason || 'triage';
+    await notifier.emitEscalation(ticketId, escReason).catch(() => {});
+  }
+
+  const status = should_escalate ? 'escalated' : 'succeeded';
   await writeRun({
     ...baseTrace,
     status,
@@ -85,7 +103,9 @@ export async function run(ticketId, { provider = getProvider() } = {}) {
       policy_allowed: policy.allowed,
       policy_denied: policy.denied,
       policy_escalate: policy.escalate,
-      overrides: merged.overrides,
+      overrides,
+      confidence,
+      low_confidence: lowConfidence,
     },
     model_name: res.model,
     latency_ms: res.latency_ms,

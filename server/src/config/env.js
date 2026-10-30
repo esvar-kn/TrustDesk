@@ -39,6 +39,7 @@ const schema = z.object({
   // Seeded demo user passwords — hashed with bcrypt at seed time, never stored plain.
   DEMO_AGENT_PASSWORD: z.string().optional(),
   DEMO_MANAGER_PASSWORD: z.string().optional(),
+  DEMO_AUDITOR_PASSWORD: z.string().optional(),
 
   // Seed source directory (the pack's data/). Resolved from the repo by default.
   DATA_DIR: z.string().optional(),
@@ -59,6 +60,9 @@ const schema = z.object({
   PROMPT_VERSION: z.string().default('v1'),
   EVAL_CONCURRENCY: z.coerce.number().int().positive().default(2),
   MOCK_DELAY_MS: z.coerce.number().int().min(0).default(0),
+  // Triage confidence gate (Phase 8.5): a model confidence below this forces the
+  // ticket to escalate, on top of the deterministic policy escalation.
+  CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.6),
 }).superRefine((val, ctx) => {
   // A real provider needs a key; mock needs nothing.
   if (val.LLM_PROVIDER !== 'mock' && !val.LLM_API_KEY) {

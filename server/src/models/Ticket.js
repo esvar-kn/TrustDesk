@@ -15,9 +15,25 @@ const triageSchema = new Schema(
     priority: String,
     sentiment: String,
     should_escalate: Boolean,
+    confidence: Number, // model self-reported triage confidence (Phase 8.5)
     reason_summary: String,
     run_id: String,
     overrides: { type: [overrideSchema], default: [] },
+  },
+  { _id: false },
+);
+
+// One turn in a ticket conversation (Phase 8.1). `role` is who sent it; customer
+// turns carry the scanner `flags` computed when they were appended. Legacy tickets
+// have an empty `messages` array and are treated as a single customer message
+// synthesized from `subject` + `body`.
+const messageSchema = new Schema(
+  {
+    message_id: { type: String, required: true },
+    role: { type: String, enum: ['customer', 'agent'], default: 'customer' },
+    body: { type: String, required: true },
+    created_at: String, // ISO with offset
+    flags: { type: Schema.Types.Mixed, default: null }, // scanner flags for customer turns
   },
   { _id: false },
 );
@@ -33,6 +49,9 @@ const ticketSchema = new Schema(
     channel: String,
     subject: String,
     body: { type: String, required: true }, // stored verbatim, never modified
+    // Conversation turns (Phase 8.1). Empty for legacy single-message tickets;
+    // when populated, the first entry mirrors the original `body`.
+    messages: { type: [messageSchema], default: [] },
     created_at: String, // ISO with offset; used as "now" by the policy engine
     status: { type: String, default: 'open' },
     triage: { type: triageSchema, default: undefined },

@@ -48,11 +48,17 @@ function mockTriage(text) {
 
   const should_escalate = INJECTION_RE.test(text) || /swelling|overheat|identity/.test(t);
 
+  // Deterministic confidence: high when a category keyword matched, low when the
+  // classification fell back to "general" (ambiguous) — which trips the Phase 8.5
+  // confidence gate unless the ticket already escalates for another reason.
+  const confidence = category === 'general' ? 0.45 : 0.9;
+
   return {
     category,
     priority,
     sentiment,
     should_escalate,
+    confidence,
     reason_summary: `Mock triage: category=${category}, priority=${priority}.`,
   };
 }

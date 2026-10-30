@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { toolActionService } from '../services/tools/toolActionService.js';
+import { buildAuditPacket } from '../services/compliance/auditPacket.js';
 import ToolAction from '../models/ToolAction.js';
 
 const clean = (a) => {
@@ -14,6 +15,7 @@ const clean = (a) => {
 
 export const toolActionsRouter = Router();
 toolActionsRouter.use(requireAuth);
+toolActionsRouter.use(blockAuditorWrites);
 
 const createSchema = z.object({
   ticket_id: z.string().min(1),
@@ -55,6 +57,12 @@ toolActionsRouter.post(
     res.json(clean(action));
   },
 );
+
+// GET /api/tool-actions/:id/audit-packet → deterministic, signed compliance
+// packet for this action (Phase 8.6). Byte-stable for a terminal action.
+toolActionsRouter.get('/:id/audit-packet', async (req, res) => {
+  res.json(await buildAuditPacket(req.params.id));
+});
 
 // POST /api/tool-actions/:id/execute → manager executes an approved action.
 toolActionsRouter.post('/:id/execute', requireRole('manager'), async (req, res) => {

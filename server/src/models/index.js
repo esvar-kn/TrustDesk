@@ -16,3 +16,4 @@ export { default as AgentRun } from './AgentRun.js';
 export { default as EvalRun } from './EvalRun.js';
 export { default as EvalCase } from './EvalCase.js';
 export { default as ToolCatalog } from './ToolCatalog.js';
+export { default as Notification } from './Notification.js';
