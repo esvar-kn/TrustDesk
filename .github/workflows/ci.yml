@@ -11,23 +11,6 @@ jobs:
     name: validate · lint · test · eval · build
     runs-on: ubuntu-latest
 
-    # MongoDB for the seed + mock eval steps. The Vitest suite uses its own
-    # in-memory mongod (mongodb-memory-server), so it does not rely on this.
-    services:
-      mongo:
-        image: mongo:8
-        ports:
-          - 27017:27017
-        # Give mongod time to come up before the first probe (cold image pull +
-        # startup can exceed the old 10s×10 window on a loaded runner), and fall
-        # back to the legacy `mongo` shell if `mongosh` is unavailable.
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })' || mongo --quiet --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 15
-          --health-start-period 40s
-
     env:
       NODE_ENV: test
       MONGODB_URI: mongodb://localhost:27017/trustdesk_ci
@@ -41,6 +24,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # MongoDB for the seed + mock eval steps. We run mongod directly on the
+      # runner instead of a Docker service container (the mongo:8 service failed
+      # to initialize on hosted runners). The Vitest suite uses its own
+      # in-memory mongod (mongodb-memory-server) and does not depend on this.
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.0
+        with:
+          mongodb-version: '8.0'
+          mongodb-port: 27017
 
       # 1) Pack validation — the data is parseable and internally consistent.
       - name: Set up Python
