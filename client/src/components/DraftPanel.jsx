@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { Card, CardHead, btnOutline, Banner } from './ui.jsx';
+import { Card, CardHead, btnOutline, btnPrimary, Banner } from './ui.jsx';
 import { Badge } from './Badges.jsx';
 
 const DECISION = {
@@ -9,13 +9,40 @@ const DECISION = {
   refuse: { tone: 'blocked', icon: 'block' },
 };
 
-export default function DraftPanel({ ticketId, onDrafted }) {
+export default function DraftPanel({ ticketId, onDrafted, onAddedToThread, onSent, resolved, readOnly = false }) {
   const [res, setRes] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [cite, setCite] = useState(null);
   const [citeBusy, setCiteBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [addBusy, setAddBusy] = useState(false);
+  const [sendBusy, setSendBusy] = useState(false);
+
+  // Rehydrate a previously generated draft when the ticket changes, so switching
+  // tickets doesn't blank out the draft, citations and provenance that already
+  // exist server-side. A fresh ticket returns null and shows the empty state.
+  useEffect(() => {
+    let active = true;
+    setRes(null);
+    setCite(null);
+    setError(null);
+    api(`/tickets/${ticketId}/draft`)
+      .then((r) => {
+        if (!active || !r) return;
+        setRes(r);
+        onDrafted?.(r);
+      })
+      .catch(() => {
+        /* non-fatal: fall back to the empty "no draft yet" state */
+      });
+    return () => {
+      active = false;
+    };
+    // onDrafted is a stable setState dispatcher from the parent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticketId]);
 
   async function run() {
     setBusy(true);
@@ -57,6 +84,41 @@ export default function DraftPanel({ ticketId, onDrafted }) {
     }
   }
 
+  // Send the drafted reply (mock) and resolve the ticket.
+  async function sendReply() {
+    if (!draft?.body) return;
+    setSendBusy(true);
+    setError(null);
+    try {
+      await api(`/tickets/${ticketId}/send`, { method: 'POST' });
+      onSent?.();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSendBusy(false);
+    }
+  }
+
+  // Append the drafted reply to the ticket conversation as an agent turn.
+  async function addToThread() {
+    if (!draft?.body) return;
+    setAddBusy(true);
+    setError(null);
+    try {
+      await api(`/tickets/${ticketId}/messages`, {
+        method: 'POST',
+        body: { body: draft.body, role: 'agent' },
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+      onAddedToThread?.();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setAddBusy(false);
+    }
+  }
+
   const draft = res?.draft;
   const activeFlags = Object.entries(res?.flags || {})
     .filter(([k, v]) => v && k !== 'any')
@@ -71,10 +133,12 @@ export default function DraftPanel({ ticketId, onDrafted }) {
         <div className="flex items-center gap-space-sm">
           {flagged && <Badge tone="pending" icon="shield">Safe fallback mode</Badge>}
           <Badge tone="neutral">{res?.prompt_version || 'draft.v1'}</Badge>
-          <button className={btnOutline} onClick={run} disabled={busy}>
-            <span className="material-symbols-outlined text-[16px]">autorenew</span>
-            {busy ? 'Drafting…' : draft ? 'Regenerate' : 'Draft reply'}
-          </button>
+          {!readOnly && (
+            <button className={btnOutline} onClick={run} disabled={busy}>
+              <span className="material-symbols-outlined text-[16px]">autorenew</span>
+              {busy ? 'Drafting…' : draft ? 'Regenerate' : 'Draft reply'}
+            </button>
+          )}
         </div>
       </CardHead>
 
@@ -91,12 +155,33 @@ export default function DraftPanel({ ticketId, onDrafted }) {
               {draft.decision}
             </Badge>
             {draft.body && (
-              <button className={btnOutline} onClick={copyReply}>
-                <span className="material-symbols-outlined text-[16px]">
-                  {copied ? 'done' : 'content_copy'}
-                </span>
-                {copied ? 'Copied' : 'Copy reply'}
-              </button>
+              <div className="flex items-center gap-space-sm">
+                {resolved ? (
+                  <span className="inline-flex items-center gap-space-2xs text-body-sm text-status-safe-fg">
+                    <span className="material-symbols-outlined text-[16px]">task_alt</span>
+                    Sent · ticket resolved
+                  </span>
+                ) : (
+                  !readOnly && (
+                    <button className={btnPrimary} onClick={sendReply} disabled={sendBusy}>
+                      <span className="material-symbols-outlined text-[16px]">send</span>
+                      {sendBusy ? 'Sending…' : 'Send reply'}
+                    </button>
+                  )
+                )}
+                {!readOnly && (
+                  <button className={btnOutline} onClick={addToThread} disabled={addBusy}>
+                    <span className="material-symbols-outlined text-[16px]">{added ? 'done' : 'forum'}</span>
+                    {added ? 'Added' : addBusy ? 'Adding…' : 'Add to thread'}
+                  </button>
+                )}
+                <button className={btnOutline} onClick={copyReply}>
+                  <span className="material-symbols-outlined text-[16px]">
+                    {copied ? 'done' : 'content_copy'}
+                  </span>
+                  {copied ? 'Copied' : 'Copy reply'}
+                </button>
+              </div>
             )}
           </div>
 

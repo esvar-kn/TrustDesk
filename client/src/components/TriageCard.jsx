@@ -18,7 +18,7 @@ function Cell({ label, children }) {
   );
 }
 
-export default function TriageCard({ ticketId, triage, flagged = false, onTriaged }) {
+export default function TriageCard({ ticketId, triage, flagged = false, readOnly = false, onTriaged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,10 +38,12 @@ export default function TriageCard({ ticketId, triage, flagged = false, onTriage
   return (
     <Card>
       <CardHead icon="account_tree" title="AI Triage Classification">
-        <button className={btnOutline} onClick={run} disabled={busy}>
-          <span className="material-symbols-outlined text-[16px]">refresh</span>
-          {busy ? 'Running…' : triage ? 'Run triage again' : 'Run triage'}
-        </button>
+        {!readOnly && (
+          <button className={btnOutline} onClick={run} disabled={busy}>
+            <span className="material-symbols-outlined text-[16px]">refresh</span>
+            {busy ? 'Running…' : triage ? 'Run triage again' : 'Run triage'}
+          </button>
+        )}
       </CardHead>
 
       {error && <Banner tone="blocked">{error}</Banner>}
@@ -52,12 +54,19 @@ export default function TriageCard({ ticketId, triage, flagged = false, onTriage
         </p>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-md">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-md">
             <Cell label="Category">{triage.category}</Cell>
             <Cell label="Priority">
               <span className={PRIORITY_TEXT[triage.priority] || ''}>{triage.priority}</span>
             </Cell>
             <Cell label="Sentiment">{triage.sentiment}</Cell>
+            {triage.confidence != null && (
+              <Cell label="Confidence">
+                <span className={triage.confidence < 0.6 ? 'text-status-pending-fg' : 'text-on-surface'}>
+                  {Math.round(triage.confidence * 100)}%
+                </span>
+              </Cell>
+            )}
             <Cell label="Escalate">
               <span
                 className={`inline-flex items-center gap-space-2xs ${
@@ -81,7 +90,7 @@ export default function TriageCard({ ticketId, triage, flagged = false, onTriage
 
           {triage.reason_summary && (
             <p className="mt-space-md px-space-md py-space-sm rounded-md bg-surface-container-low text-body-md text-on-surface-variant">
-              <span className="font-medium text-on-surface">Deterministic reason: </span>
+              <span className="font-medium text-on-surface">Reason: </span>
               {triage.reason_summary}
             </p>
           )}

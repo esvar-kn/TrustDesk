@@ -1,4 +1,4 @@
-import { Badges } from './Badges.jsx';
+import { Badges, Badge } from './Badges.jsx';
 
 const CHANNEL_ICON = { email: 'mail', chat: 'chat', phone: 'call', web: 'language' };
 
@@ -15,8 +15,25 @@ function relTime(iso) {
 }
 
 export default function TicketQueue({ tickets, selectedId, onSelect }) {
+  // Arrow-key navigation (Phase 8.9): move the selection up/down while focus is
+  // on a queue row, and keep focus on the newly selected row.
+  function onKeyDown(e) {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const idx = tickets.findIndex((t) => t.ticket_id === selectedId);
+    const next =
+      e.key === 'ArrowDown'
+        ? Math.min(tickets.length - 1, idx + 1)
+        : Math.max(0, idx - 1);
+    const t = tickets[next];
+    if (t) {
+      onSelect(t.ticket_id);
+      e.currentTarget.querySelectorAll('button')[next]?.focus();
+    }
+  }
+
   return (
-    <ul className="flex flex-col gap-space-sm">
+    <ul className="flex flex-col gap-space-sm" onKeyDown={onKeyDown}>
       {tickets.map((t) => {
         const active = t.ticket_id === selectedId;
         return (
@@ -39,7 +56,14 @@ export default function TicketQueue({ tickets, selectedId, onSelect }) {
                 </span>
               </div>
               <div className="text-body-md text-on-surface leading-snug line-clamp-2">{t.subject}</div>
-              <Badges triage={t.triage} />
+              <span className="inline-flex flex-wrap items-center gap-space-2xs">
+                <Badges triage={t.triage} />
+                {t.status === 'resolved' && (
+                  <Badge tone="safe" icon="task_alt">
+                    resolved
+                  </Badge>
+                )}
+              </span>
             </button>
           </li>
         );

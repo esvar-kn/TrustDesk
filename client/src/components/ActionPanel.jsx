@@ -34,8 +34,9 @@ function buildPayload(tool, { ticketId, customer, order }) {
   }
 }
 
-export default function ActionPanel({ user, ticketId, customer, order, recommended = [] }) {
+export default function ActionPanel({ user, ticketId, customer, order, recommended = [], onChanged }) {
   const isManager = user?.role === 'manager';
+  const canRequest = user?.role === 'agent' || user?.role === 'manager';
   const [actions, setActions] = useState([]);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null); // key of the in-flight operation
@@ -58,6 +59,9 @@ export default function ActionPanel({ user, ticketId, customer, order, recommend
     try {
       await fn();
       await load();
+      // Let the workspace refresh queue state (e.g. the "Awaiting approval"
+      // count) after a request / approval / execution changes an action.
+      onChanged?.();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -105,7 +109,7 @@ export default function ActionPanel({ user, ticketId, customer, order, recommend
 
       {error && <Banner tone="blocked">{error}</Banner>}
 
-      {requestable.length > 0 && (
+      {canRequest && requestable.length > 0 && (
         <div className="flex flex-col gap-space-sm">
           {requestable.map((tool) => {
             const p = buildPayload(tool, { ticketId, customer, order });

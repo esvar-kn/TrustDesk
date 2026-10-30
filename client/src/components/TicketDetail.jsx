@@ -5,6 +5,7 @@ import { Card, CardHead, Field, btnOutline, Banner } from './ui.jsx';
 import TriageCard from './TriageCard.jsx';
 import DraftPanel from './DraftPanel.jsx';
 import ActionPanel from './ActionPanel.jsx';
+import ConversationThread from './ConversationThread.jsx';
 import { SevBanner, ActionAudit, KbProvenance } from './SecurityPanels.jsx';
 
 const DAY = 86_400_000;
@@ -30,13 +31,14 @@ function slaModel(ticket, order) {
   };
 }
 
-export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace }) {
+export default function TicketDetail({ ticketId, user, version = 0, onChanged, onOpenTrace }) {
+  const readOnly = user?.role === 'auditor';
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [draftRes, setDraftRes] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [run, setRun] = useState(null); // agent-run trace, fetched when flagged
+  const [reopenBusy, setReopenBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,6 +56,13 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
     load();
   }, [load]);
 
+  // Reload when the parent bumps `version` (e.g. after a bulk-triage run) so the
+  // open ticket's triage reflects the change without being re-selected.
+  useEffect(() => {
+    if (version) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
+
   // When the scanner flagged the ticket, pull the draft's agent-run trace for the
   // denied actions and quarantined docs shown in the defense panels.
   useEffect(() => {
@@ -66,6 +75,20 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
     }
   }, [draftRes]);
 
+  async function reopen() {
+    setReopenBusy(true);
+    setError(null);
+    try {
+      await api(`/tickets/${ticketId}/reopen`, { method: 'POST' });
+      await load();
+      onChanged?.();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setReopenBusy(false);
+    }
+  }
+
   if (loading && !data) return <p className="text-body-md text-on-surface-variant p-space-md">Loading ticket…</p>;
   if (error) return <div className="p-space-md"><Banner tone="blocked">{error}</Banner></div>;
   if (!data) return null;
@@ -76,16 +99,6 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
   const denied = run?.guardrail_results?.policy_denied || [];
   const verified = run?.retrieved_doc_ids || draftRes?.draft?.citations || [];
   const quarantined = run?.quarantined_doc_ids || [];
-
-  async function copyMessage() {
-    try {
-      await navigator.clipboard.writeText(data.body || '');
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard unavailable */
-    }
-  }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-space-lg items-start">
@@ -98,35 +111,41 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
             <Badges triage={data.triage} />
           </div>
           <h2 className="text-headline-md font-semibold mt-space-xs">{data.subject}</h2>
-          <div className="flex items-center justify-between gap-space-md mt-space-md mb-space-xs">
-            <span className="flex items-center gap-space-xs text-label-sm uppercase tracking-wide text-on-surface-variant">
-              <span className="material-symbols-outlined text-[14px]">lock</span>
-              Customer message (unchanged)
-            </span>
-            <button className={btnOutline} onClick={copyMessage}>
-              <span className="material-symbols-outlined text-[16px]">{copied ? 'done' : 'content_copy'}</span>
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-          </div>
-          <blockquote className="px-space-md py-space-sm rounded-md bg-surface-container-low border-l-[3px] border-outline-variant whitespace-pre-wrap leading-relaxed text-body-lg">
-            {data.body}
-          </blockquote>
-          <p className="mono text-code-sm text-on-surface-variant mt-space-sm">
-            via {data.channel || 'n/a'} · {data.created_at}
-          </p>
+          {data.status === 'resolved' && (
+            <div className="flex items-center justify-between gap-space-md mt-space-md">
+              <Badge tone="safe" icon="task_alt">resolved</Badge>
+              <button className={btnOutline} onClick={reopen} disabled={reopenBusy}>
+                <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                {reopenBusy ? 'Reopening…' : 'Reopen'}
+              </button>
+            </div>
+          )}
         </Card>
+
+        <ConversationThread ticket={data} readOnly={readOnly} onChanged={load} />
 
         <TriageCard
           ticketId={data.ticket_id}
           triage={data.triage}
           flagged={flagged}
+          readOnly={readOnly}
           onTriaged={async () => {
             await load();
             onChanged?.();
           }}
         />
 
-        <DraftPanel ticketId={data.ticket_id} onDrafted={setDraftRes} />
+        <DraftPanel
+          ticketId={data.ticket_id}
+          readOnly={readOnly}
+          onDrafted={setDraftRes}
+          onAddedToThread={load}
+          resolved={data.status === 'resolved'}
+          onSent={() => {
+            load();
+            onChanged?.();
+          }}
+        />
 
         <ActionPanel
           user={user}
@@ -134,6 +153,7 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
           customer={customer}
           order={order}
           recommended={draftRes?.draft?.actions || []}
+          onChanged={onChanged}
         />
 
         {flagged && <ActionAudit denied={denied} recommended={draftRes?.draft?.actions || []} />}
@@ -220,7 +240,7 @@ export default function TicketDetail({ ticketId, user, onChanged, onOpenTrace })
         {flagged && <KbProvenance verified={verified} quarantined={quarantined} />}
 
         <Card>
-          <CardHead icon="fingerprint" title="Deterministic Provenance" />
+          <CardHead icon="fingerprint" title="Execution Provenance" />
           <div className="grid grid-cols-2 gap-space-md">
             <Field label="Run ID" mono>{draftRes?.run_id || data.triage?.run_id || '—'}</Field>
             <Field label="Decision">{draftRes?.decision || '—'}</Field>
