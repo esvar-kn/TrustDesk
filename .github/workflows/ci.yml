@@ -25,6 +25,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # TEMP diagnostic: the mongo:8 container exits immediately on this runner.
+      # Capture mongod's own crash output and the CPU's AVX flags to pin the
+      # cause (MongoDB 5.0+ needs AVX). This step is informational (|| true).
+      - name: Diagnose MongoDB startup
+        run: |
+          echo "=== CPU AVX flags ==="
+          grep -o -E 'avx[0-9a-z_]*' /proc/cpuinfo | sort -u || echo "(no avx flags)"
+          echo "=== docker run mongo:8.0 ==="
+          docker run --name diag -d mongo:8.0 || true
+          sleep 6
+          echo "--- container status ---"
+          docker ps -a --filter name=diag --format '{{.Status}}'
+          echo "--- mongod output ---"
+          docker logs diag 2>&1 || true
+          docker rm -f diag >/dev/null 2>&1 || true
+
+      # Probe whose pass/fail is readable via the API: fails if AVX is absent.
+      - name: AVX probe
+        run: grep -qw avx /proc/cpuinfo
+
       # MongoDB for the seed + mock eval steps. We run mongod directly on the
       # runner instead of a Docker service container (the mongo:8 service failed
       # to initialize on hosted runners). The Vitest suite uses its own
