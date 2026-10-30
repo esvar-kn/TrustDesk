@@ -2,10 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Audit-first LIGHT palette — MD3 tokens from the Stitch DESIGN.md. These CSS
- * vars re-theme the Phase-5 components that are rebuilt in 7.1–7.7; new shell
- * components use the Tailwind token classes directly. */
+/* Audit-first palette — MD3 tokens from the Stitch DESIGN.md.
+ *
+ * Two layers of CSS vars:
+ *   --c-*   semantic design tokens consumed by Tailwind (tailwind.config.js).
+ *   --bg … legacy vars used by the hand-written CSS classes further down and
+ *          by <body>.
+ * :root holds the LIGHT values; `.dark` (toggled on <html>) overrides both
+ * layers so the whole app re-themes with no component changes. */
 :root {
+  /* Semantic tokens (light) */
+  --c-surface: #fcf9f5;
+  --c-surface-dim: #dcdad6;
+  --c-surface-bright: #fcf9f5;
+  --c-surface-container-lowest: #ffffff;
+  --c-surface-container-low: #f6f3ef;
+  --c-surface-container: #f0edea;
+  --c-surface-container-high: #ebe8e4;
+  --c-surface-container-highest: #e5e2de;
+  --c-on-surface: #1c1c1a;
+  --c-on-surface-variant: #3e4947;
+  --c-inverse-surface: #31302e;
+  --c-inverse-on-surface: #f3f0ec;
+  --c-outline: #6e7977;
+  --c-outline-variant: #bdc9c6;
+  --c-rule: #e3e3dc;
+  --c-surface-tint: #006a63;
+  --c-primary: #005c55;
+  --c-on-primary: #ffffff;
+  --c-primary-container: #0e766e;
+  --c-on-primary-container: #a3faef;
+  --c-inverse-primary: #7fd5cc;
+  --c-secondary: #006b5f;
+  --c-on-secondary: #ffffff;
+  --c-secondary-container: #6df5e1;
+  --c-on-secondary-container: #006f64;
+  --c-tertiary: #7f4026;
+  --c-on-tertiary: #ffffff;
+  --c-tertiary-container: #9c573b;
+  --c-on-tertiary-container: #ffe5dc;
+  --c-error: #ba1a1a;
+  --c-on-error: #ffffff;
+  --c-error-container: #ffdad6;
+  --c-on-error-container: #93000a;
+  --c-background: #fcf9f5;
+  --c-on-background: #1c1c1a;
+  --c-surface-variant: #e5e2de;
+  --c-status-safe-fg: #166534;
+  --c-status-safe-bg: #dcfce7;
+  --c-status-safe-outline: #bbf7d0;
+  --c-status-pending-fg: #b45309;
+  --c-status-pending-bg: #fef3c7;
+  --c-status-pending-outline: #fde68a;
+  --c-status-blocked-fg: #991b1b;
+  --c-status-blocked-bg: #fee2e2;
+  --c-status-blocked-outline: #fecaca;
+  --c-status-escalated-fg: #1d4ed8;
+  --c-status-escalated-bg: #dbeafe;
+  --c-status-escalated-outline: #bfdbfe;
+  --c-focus-ring: #14b8a6;
+
+  /* Legacy vars (light) */
   --bg: #fcf9f5;
   --panel: #ffffff;
   --panel-2: #f4f4f1;
@@ -18,6 +75,75 @@
   --focus-ring: #14b8a6;
   font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color-scheme: light;
+}
+
+/* Audit-first DARK palette. Mirrors the MD3 tone roles: darkest at
+ * container-lowest, lightest at container-highest, with the brand teal and the
+ * status triad lifted for contrast on a dark surface. */
+.dark {
+  /* Semantic tokens (dark) */
+  --c-surface: #141615;
+  --c-surface-dim: #0e100f;
+  --c-surface-bright: #3a3b39;
+  --c-surface-container-lowest: #0e100f;
+  --c-surface-container-low: #1c1e1d;
+  --c-surface-container: #202221;
+  --c-surface-container-high: #2a2c2b;
+  --c-surface-container-highest: #353736;
+  --c-on-surface: #e5e2de;
+  --c-on-surface-variant: #bfc9c6;
+  --c-inverse-surface: #e5e2de;
+  --c-inverse-on-surface: #31302e;
+  --c-outline: #889390;
+  --c-outline-variant: #3f4947;
+  --c-rule: #2c2e2d;
+  --c-surface-tint: #7fd5cc;
+  --c-primary: #4ec9bd;
+  --c-on-primary: #003731;
+  --c-primary-container: #14938a;
+  --c-on-primary-container: #a3faef;
+  --c-inverse-primary: #005c55;
+  --c-secondary: #4fd9c6;
+  --c-on-secondary: #00382f;
+  --c-secondary-container: #005046;
+  --c-on-secondary-container: #6df5e1;
+  --c-tertiary: #ffb597;
+  --c-on-tertiary: #522300;
+  --c-tertiary-container: #9c573b;
+  --c-on-tertiary-container: #ffe5dc;
+  --c-error: #ffb4ab;
+  --c-on-error: #690005;
+  --c-error-container: #93000a;
+  --c-on-error-container: #ffdad6;
+  --c-background: #141615;
+  --c-on-background: #e5e2de;
+  --c-surface-variant: #353736;
+  --c-status-safe-fg: #4ade80;
+  --c-status-safe-bg: #0f2a1a;
+  --c-status-safe-outline: #166534;
+  --c-status-pending-fg: #fbbf24;
+  --c-status-pending-bg: #2a2410;
+  --c-status-pending-outline: #b45309;
+  --c-status-blocked-fg: #f87171;
+  --c-status-blocked-bg: #2a1414;
+  --c-status-blocked-outline: #991b1b;
+  --c-status-escalated-fg: #60a5fa;
+  --c-status-escalated-bg: #101f3a;
+  --c-status-escalated-outline: #1d4ed8;
+  --c-focus-ring: #2dd4bf;
+
+  /* Legacy vars (dark) */
+  --bg: #141615;
+  --panel: #1c1e1d;
+  --panel-2: #202221;
+  --border: #2c2e2d;
+  --text: #e5e2de;
+  --muted: #bfc9c6;
+  --accent: #4ec9bd;
+  --danger: #ffb4ab;
+  --ok: #4ade80;
+  --focus-ring: #2dd4bf;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -52,7 +178,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 .banner { border-radius: 8px; padding: 10px 12px; margin: 8px 0; font-size: 0.9rem; }
-.banner.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.banner.error { background: var(--c-status-blocked-bg); color: var(--c-status-blocked-fg); border: 1px solid var(--c-status-blocked-outline); }
 
 /* Login */
 .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
@@ -90,7 +216,7 @@ button { font: inherit; cursor: pointer; }
   width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--border);
   border-radius: 10px; padding: 10px 12px; color: var(--text); display: flex; flex-direction: column; gap: 6px;
 }
-.queue-item:hover { border-color: #3a4a66; }
+.queue-item:hover { border-color: var(--accent); }
 .queue-item.active { border-color: var(--accent); background: var(--panel-2); }
 .qid { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .qsubj { font-size: 0.92rem; line-height: 1.3; }
