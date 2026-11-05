@@ -14,8 +14,12 @@ export default defineConfig({
       DEMO_AGENT_PASSWORD: 'agent-pass',
       DEMO_MANAGER_PASSWORD: 'manager-pass',
     },
-    // mongodb-memory-server's first boot can be slow; give suites room.
-    testTimeout: 120000,
-    hookTimeout: 120000,
+    // One shared in-memory mongod for the whole run; each file connects to its
+    // own database on it (see test/helpers/globalSetup.js + testDb.js).
+    globalSetup: ['./test/helpers/globalSetup.js'],
+    // Connecting to the already-running shared server is fast; the single binary
+    // launch happens once in globalSetup, which has its own generous timeout.
+    testTimeout: 20000,
+    hookTimeout: 30000,
   },
 });
