@@ -42,7 +42,7 @@ export const anthropicProvider = {
       resp = await getClient().messages.create(
         {
           model: env.LLM_MODEL,
-          max_tokens: 1024,
+          max_tokens: env.LLM_MAX_TOKENS,
           system: sys,
           messages: toMessages(messages),
         },

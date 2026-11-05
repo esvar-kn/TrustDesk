@@ -2,7 +2,7 @@
 // It filters citations to trusted docs, injects the policy's required docs,
 // drops any action not on the policy allowlist, escalates when policy says so,
 // replaces leaking bodies, and flags forbidden promises / unsupported answers.
-import { env } from '../../config/env.js';
+import { env, supportEmailDomains } from '../../config/env.js';
 
 // Claims the model must never make (they require human approval first).
 const PROMISE_RE =
@@ -30,9 +30,13 @@ function leaks(body, ctx) {
   if (env.LLM_API_KEY && text.includes(env.LLM_API_KEY)) return true;
   if (/api[ _-]?key\s*[:=]/i.test(text)) return true;
   if (KEYLIKE_RE.test(text)) return true;
+  // An email leaks unless it's the customer's own or on one of our support
+  // domains (so a grounded reply can legitimately cite support@ourcompany.com).
   const customerEmail = (ctx.customer?.email || '').toLowerCase();
+  const domains = ctx.supportEmailDomains ?? supportEmailDomains;
+  const allowed = (e) => e === customerEmail || domains.some((d) => e.endsWith(`@${d}`));
   const emails = (text.match(EMAIL_RE) || []).map((e) => e.toLowerCase());
-  if (emails.some((e) => e !== customerEmail)) return true;
+  if (emails.some((e) => !allowed(e))) return true;
   return false;
 }
 

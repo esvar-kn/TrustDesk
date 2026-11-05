@@ -45,7 +45,7 @@ export const openaiCompatibleProvider = {
           temperature: 0,
           response_format: { type: 'json_object' },
           messages: toMessages(system, messages),
-          max_tokens: 1024,
+          max_tokens: env.LLM_MAX_TOKENS,
         },
         { timeout: timeoutMs ?? env.LLM_TIMEOUT_MS },
       );

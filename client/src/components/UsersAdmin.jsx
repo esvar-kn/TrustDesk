@@ -3,7 +3,7 @@
 // the read-only role. Wired to the manager-gated /api/users endpoints.
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { Card, CardHead, btnPrimary, btnOutline, btnDanger, Banner } from './ui.jsx';
+import { Card, CardHead, btnPrimary, btnDanger, Banner } from './ui.jsx';
 import { Badge } from './Badges.jsx';
 
 const ROLES = ['agent', 'manager', 'auditor'];

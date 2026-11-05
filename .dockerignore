@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+.git
+.github
+client
+docs
+docs-user
+scripts
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+server/test

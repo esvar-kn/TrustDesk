@@ -1,10 +1,13 @@
-# Local development stack.
-# Phase 1.1 provides MongoDB only; the server and client service definitions
-# (which need their Dockerfiles) are added in the deployment phase.
+# Full local stack: MongoDB + API server + client (nginx).
 #
-#   docker compose up -d mongo      # start MongoDB in the background
-#   docker compose down             # stop it (data persists in the volume)
-#   docker compose down -v          # stop and wipe the data volume
+#   docker compose up -d                       # build + start everything
+#   docker compose run --rm server npm run seed  # seed the database (one-off)
+#   open http://localhost:8080                 # the app (nginx proxies /api → server)
+#   docker compose down                        # stop (data persists in the volume)
+#   docker compose down -v                     # stop and wipe the data volume
+#
+# Secrets are read from the repo-root .env (copy from .env.example first).
+# AUTH_JWT_SECRET is required — the server fails fast without it in production.
 
 services:
   mongo:
@@ -20,6 +23,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: trustdesk-server
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/trustdesk
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET in .env}
+      DEMO_AGENT_PASSWORD: ${DEMO_AGENT_PASSWORD:-}
+      DEMO_MANAGER_PASSWORD: ${DEMO_MANAGER_PASSWORD:-}
+      DEMO_AUDITOR_PASSWORD: ${DEMO_AUDITOR_PASSWORD:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+    ports:
+      - '4000:4000'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:4000/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  client:
+    build:
+      context: ./client
+    container_name: trustdesk-client
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - '8080:80'
 
 volumes:
   mongo-data:

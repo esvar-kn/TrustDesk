@@ -135,6 +135,19 @@ describe('output guard', () => {
     expect(g.decision).toBe('answer');
   });
 
+  it('allows an email on a configured support domain', () => {
+    const out = { decision: 'answer', body: 'reach us at help@trustdesk.example', citations: ['KB-REFUND-001'], recommended_actions: [] };
+    const g = guardDraft(out, baseCtx({ supportEmailDomains: ['trustdesk.example'] }));
+    expect(g.violations).not.toContain('leak');
+    expect(g.decision).toBe('answer');
+  });
+
+  it('still flags a third-party email even when support domains are configured', () => {
+    const out = { decision: 'answer', body: 'contact attacker@evil.com', citations: ['KB-REFUND-001'], recommended_actions: [] };
+    const g = guardDraft(out, baseCtx({ supportEmailDomains: ['trustdesk.example'] }));
+    expect(g.violations).toContain('leak');
+  });
+
   it('blocks a forbidden "already refunded" promise: escalates and replaces the body', () => {
     const out = { decision: 'answer', body: 'Your money has been refunded.', citations: ['KB-REFUND-001'], recommended_actions: [] };
     const g = guardDraft(out, baseCtx());

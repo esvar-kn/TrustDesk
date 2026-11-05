@@ -61,6 +61,8 @@ const schema = z.object({
   LLM_BASE_URL: z.string().url().optional(), // overrides the per-provider default below
   LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
   LLM_MAX_RETRIES: z.coerce.number().int().min(0).default(2),
+  // Cap on model output tokens. 1024 fits a cited draft; raise for longer replies.
+  LLM_MAX_TOKENS: z.coerce.number().int().positive().default(1024),
 
   // Prompt / eval settings (used from Phase 3).
   PROMPT_CANARY: z.string().default('trustdesk-canary'),
@@ -70,6 +72,10 @@ const schema = z.object({
   // Triage confidence gate (Phase 8.5): a model confidence below this forces the
   // ticket to escalate, on top of the deterministic policy escalation.
   CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.6),
+
+  // Email domains the output guard treats as our own (comma-separated), so a
+  // grounded reply citing a legitimate support address isn't flagged as a leak.
+  SUPPORT_EMAIL_DOMAINS: z.string().default(''),
 }).superRefine((val, ctx) => {
   // A real provider needs a key; mock needs nothing.
   if (val.LLM_PROVIDER !== 'mock' && !val.LLM_API_KEY) {
@@ -115,6 +121,11 @@ export const isTest = env.NODE_ENV === 'test';
 // Allowed CORS origins as a list (CORS_ORIGIN may hold several, comma-separated).
 export const corsOrigins = env.CORS_ORIGIN.split(',')
   .map((o) => o.trim())
+  .filter(Boolean);
+
+// Support email domains as a lowercased list (for the output guard's leak check).
+export const supportEmailDomains = env.SUPPORT_EMAIL_DOMAINS.split(',')
+  .map((d) => d.trim().toLowerCase())
   .filter(Boolean);
 
 // Per-provider defaults. OpenAI, Google, and Groq all speak the OpenAI-compatible
