@@ -47,6 +47,7 @@ const ERROR_MESSAGES = {
   INVALID_STATE: 'That action isn’t allowed in the current state.',
   IDEMPOTENCY_KEY_REUSED: 'This request was already submitted with different details.',
   APPROVAL_REQUIRED: 'This action needs manager approval first.',
+  RATE_LIMITED: 'Too many requests — please slow down and try again.',
   GUARDRAIL_BLOCKED: 'Blocked by a safety guardrail.',
   POLICY_BLOCKED: 'Blocked by policy.',
   AI_PROVIDER_ERROR: 'The AI provider is currently unavailable.',

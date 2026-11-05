@@ -29,8 +29,15 @@ const schema = z.object({
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('debug'),
 
-  // CORS — used once the client talks to the API.
+  // CORS — allowed browser origin(s) for the API. Comma-separated for more than
+  // one (e.g. a staging + prod domain). Applied by the cors middleware in app.js.
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+
+  // Rate limiting (app.js). A general per-IP ceiling plus a stricter one on the
+  // login route to blunt credential stuffing. Disabled under NODE_ENV=test.
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
 
   // Auth — required from Phase 1.5 onward; optional now so the skeleton boots.
   AUTH_JWT_SECRET: z.string().min(1).optional(),
@@ -72,6 +79,16 @@ const schema = z.object({
       message: `LLM_API_KEY is required when LLM_PROVIDER is "${val.LLM_PROVIDER}"`,
     });
   }
+  // Fail fast at boot in production if the JWT secret is missing: without it
+  // every authenticated request would otherwise fail at runtime with INTERNAL.
+  // Kept optional in development/test so the skeleton and tests stay bootable.
+  if (val.NODE_ENV === 'production' && !val.AUTH_JWT_SECRET) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['AUTH_JWT_SECRET'],
+      message: 'AUTH_JWT_SECRET is required when NODE_ENV is "production"',
+    });
+  }
 });
 
 // Treat empty-string env vars (e.g. `LLM_BASE_URL=` in .env) as unset, so
@@ -94,6 +111,11 @@ if (!parsed.success) {
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
+
+// Allowed CORS origins as a list (CORS_ORIGIN may hold several, comma-separated).
+export const corsOrigins = env.CORS_ORIGIN.split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 // Per-provider defaults. OpenAI, Google, and Groq all speak the OpenAI-compatible
 // chat-completions protocol (one adapter, different base URL); Anthropic uses its

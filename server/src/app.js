@@ -2,6 +2,10 @@
 // Supertest. Express 5 forwards rejected promises from async handlers to the
 // error handler, so routes can simply throw (or call fail()).
 import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { env, isTest, corsOrigins } from './config/env.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
 import { ticketsRouter } from './routes/tickets.js';
@@ -17,7 +21,35 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 export function createApp() {
   const app = express();
 
+  // Behind a proxy/load balancer in production, trust the first hop so the
+  // rate limiter and logging see the real client IP (not the proxy's).
+  if (env.NODE_ENV === 'production') app.set('trust proxy', 1);
+
+  // Security headers. This is a JSON API (no inline scripts/styles of its own),
+  // so helmet's defaults are a good fit; CSP mainly matters for the client build.
+  app.use(helmet());
+
+  // CORS. Browser requests from the configured origin(s) only. Auth is a Bearer
+  // token (no cookies), so credentials are not enabled.
+  app.use(cors({ origin: corsOrigins, credentials: false }));
+
   app.use(express.json());
+
+  // Rate limiting (skipped under test to keep the suite deterministic). A strict
+  // limiter guards the login route against credential stuffing; a looser one
+  // caps overall per-IP traffic. Both key on IP and return the coded error shape.
+  if (!isTest) {
+    const limited = (max) =>
+      rateLimit({
+        windowMs: env.RATE_LIMIT_WINDOW_MS,
+        max,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { error: { code: 'RATE_LIMITED', message: 'Too many requests, please slow down.' } },
+      });
+    app.use('/api/auth/login', limited(env.AUTH_RATE_LIMIT_MAX));
+    app.use('/api', limited(env.RATE_LIMIT_MAX));
+  }
 
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter);
