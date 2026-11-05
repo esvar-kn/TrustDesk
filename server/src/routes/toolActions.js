@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { requireAuth, requireRole, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
+import { getPagination } from '../middleware/pagination.js';
 import { toolActionService } from '../services/tools/toolActionService.js';
 import { buildAuditPacket } from '../services/compliance/auditPacket.js';
 import ToolAction from '../models/ToolAction.js';
@@ -44,9 +45,15 @@ toolActionsRouter.post('/', validateBody(createSchema), async (req, res) => {
 });
 
 // GET /api/tool-actions?ticket_id= → list actions (optionally by ticket).
+// Bounded by limit/offset; total is in the X-Total-Count header.
 toolActionsRouter.get('/', async (req, res) => {
   const filter = req.query.ticket_id ? { ticket_id: req.query.ticket_id.toString() } : {};
-  const actions = await ToolAction.find(filter).select('-_id -__v').sort({ created_at: -1 }).lean();
+  const { limit, skip } = getPagination(req);
+  const [actions, total] = await Promise.all([
+    ToolAction.find(filter).select('-_id -__v').sort({ created_at: -1 }).skip(skip).limit(limit).lean(),
+    ToolAction.countDocuments(filter),
+  ]);
+  res.set('X-Total-Count', String(total));
   res.json(actions);
 });
 

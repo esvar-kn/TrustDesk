@@ -43,6 +43,29 @@ describe('security headers', () => {
   });
 });
 
+describe('request correlation + readiness', () => {
+  it('echoes an X-Request-Id on every response', async () => {
+    const res = await app.get('/api/health');
+    expect(res.headers.get('x-request-id')).toBeTruthy();
+  });
+
+  it('honours an inbound X-Request-Id', async () => {
+    const port = app.server.address().port;
+    const res = await fetch(`http://127.0.0.1:${port}/api/health`, {
+      headers: { 'X-Request-Id': 'trace-abc-123' },
+    });
+    expect(res.headers.get('x-request-id')).toBe('trace-abc-123');
+  });
+
+  it('readiness returns 503 when the DB is not connected', async () => {
+    // This suite starts no DB, so mongoose is disconnected.
+    const res = await app.get('/api/health/ready');
+    expect(res.status).toBe(503);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.db).toBe('disconnected');
+  });
+});
+
 describe('production secret enforcement', () => {
   it('exits non-zero at boot when AUTH_JWT_SECRET is missing in production', () => {
     const run = () =>

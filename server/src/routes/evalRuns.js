@@ -7,6 +7,7 @@ import { fail } from '../errors.js';
 import { newId } from '../services/ids.js';
 import { requireAuth, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
+import { getPagination } from '../middleware/pagination.js';
 import { enqueue } from '../jobs/jobQueue.js';
 import { runEval } from '../services/evals/evalRunner.js';
 import EvalRun from '../models/EvalRun.js';
@@ -58,11 +59,14 @@ evalRunsRouter.post('/', validateBody(startSchema), async (req, res) => {
 });
 
 // GET /api/eval-runs → summaries, newest first (no per-case detail).
-evalRunsRouter.get('/', async (_req, res) => {
-  const runs = await EvalRun.find()
-    .select('-_id -__v -case_results')
-    .sort({ started_at: -1 })
-    .lean();
+// Bounded by limit/offset; total is in the X-Total-Count header.
+evalRunsRouter.get('/', async (req, res) => {
+  const { limit, skip } = getPagination(req);
+  const [runs, total] = await Promise.all([
+    EvalRun.find().select('-_id -__v -case_results').sort({ started_at: -1 }).skip(skip).limit(limit).lean(),
+    EvalRun.estimatedDocumentCount(),
+  ]);
+  res.set('X-Total-Count', String(total));
   res.json(runs);
 });
 

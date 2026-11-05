@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { fail } from '../errors.js';
 import { requireAuth, blockAuditorWrites } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
+import { getPagination } from '../middleware/pagination.js';
 import Customer from '../models/Customer.js';
 import Order from '../models/Order.js';
 import Ticket from '../models/Ticket.js';
@@ -34,9 +35,15 @@ export const ticketsRouter = Router();
 ticketsRouter.use(requireAuth);
 ticketsRouter.use(blockAuditorWrites);
 
-// GET /api/tickets → all tickets (no label fields; those live in seed_labels).
-ticketsRouter.get('/', async (_req, res) => {
-  const tickets = await Ticket.find().select(PROJECTION).sort({ ticket_id: 1 }).lean();
+// GET /api/tickets → tickets (no label fields; those live in seed_labels).
+// Bounded by limit/offset; total is in the X-Total-Count header.
+ticketsRouter.get('/', async (req, res) => {
+  const { limit, skip } = getPagination(req);
+  const [tickets, total] = await Promise.all([
+    Ticket.find().select(PROJECTION).sort({ ticket_id: 1 }).skip(skip).limit(limit).lean(),
+    Ticket.estimatedDocumentCount(),
+  ]);
+  res.set('X-Total-Count', String(total));
   res.json(tickets);
 });
 
@@ -201,10 +208,17 @@ ticketsRouter.get('/:id/draft', async (req, res) => {
 
 // GET /api/tickets/:id/runs → all agent-run traces for a ticket, newest first.
 ticketsRouter.get('/:id/runs', async (req, res) => {
-  const runs = await AgentRun.find({ ticket_id: req.params.id })
-    .select('-_id -__v')
-    .sort({ created_at: -1 })
-    .lean();
+  const { limit, skip } = getPagination(req);
+  const [runs, total] = await Promise.all([
+    AgentRun.find({ ticket_id: req.params.id })
+      .select('-_id -__v')
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    AgentRun.countDocuments({ ticket_id: req.params.id }),
+  ]);
+  res.set('X-Total-Count', String(total));
   res.json(runs);
 });
 

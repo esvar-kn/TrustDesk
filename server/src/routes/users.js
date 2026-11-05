@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { fail } from '../errors.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
+import { getPagination } from '../middleware/pagination.js';
 import User from '../models/User.js';
 
 const BCRYPT_ROUNDS = 10;
@@ -16,9 +17,15 @@ export const usersRouter = Router();
 usersRouter.use(requireAuth);
 usersRouter.use(requireRole('manager'));
 
-// GET /api/users → list users (no password hashes).
-usersRouter.get('/', async (_req, res) => {
-  const users = await User.find().select('username role created_at -_id').sort({ username: 1 }).lean();
+// GET /api/users → list users (no password hashes). Bounded by limit/offset;
+// total is in the X-Total-Count header.
+usersRouter.get('/', async (req, res) => {
+  const { limit, skip } = getPagination(req);
+  const [users, total] = await Promise.all([
+    User.find().select('username role created_at -_id').sort({ username: 1 }).skip(skip).limit(limit).lean(),
+    User.estimatedDocumentCount(),
+  ]);
+  res.set('X-Total-Count', String(total));
   res.json(users);
 });
 
@@ -43,6 +50,11 @@ usersRouter.post('/', validateBody(createSchema), async (req, res) => {
 });
 
 const patchSchema = z.object({ role: z.enum(ROLES) });
+
+// Note on the "last manager" lockout: it can't happen through this API. Every
+// caller here is a manager (requireRole) and cannot demote or delete their own
+// account (the self-checks below), so at least the caller always remains a
+// manager — a separate last-manager guard would be unreachable dead code.
 
 // PATCH /api/users/:username → change a user's role (not your own).
 usersRouter.patch('/:username', validateBody(patchSchema), async (req, res) => {

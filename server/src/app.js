@@ -2,10 +2,13 @@
 // Supertest. Express 5 forwards rejected promises from async handlers to the
 // error handler, so routes can simply throw (or call fail()).
 import express from 'express';
+import { randomUUID } from 'node:crypto';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import pinoHttp from 'pino-http';
 import { env, isTest, corsOrigins } from './config/env.js';
+import { logger } from './config/logger.js';
 import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
 import { ticketsRouter } from './routes/tickets.js';
@@ -30,8 +33,29 @@ export function createApp() {
   app.use(helmet());
 
   // CORS. Browser requests from the configured origin(s) only. Auth is a Bearer
-  // token (no cookies), so credentials are not enabled.
-  app.use(cors({ origin: corsOrigins, credentials: false }));
+  // token (no cookies), so credentials are not enabled. Expose the custom
+  // response headers so a cross-origin client can read them.
+  app.use(
+    cors({
+      origin: corsOrigins,
+      credentials: false,
+      exposedHeaders: ['X-Total-Count', 'X-Request-Id'],
+    }),
+  );
+
+  // Per-request structured logging with a correlation id. Honour an inbound
+  // X-Request-Id (set by an upstream proxy) or mint one, and echo it back so a
+  // client/log line can be traced end to end. Logger is silent under test.
+  app.use(
+    pinoHttp({
+      logger,
+      genReqId: (req, res) => {
+        const id = req.headers['x-request-id'] || randomUUID();
+        res.setHeader('X-Request-Id', id);
+        return id;
+      },
+    }),
+  );
 
   app.use(express.json());
 

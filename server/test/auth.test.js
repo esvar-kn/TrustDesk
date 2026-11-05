@@ -126,6 +126,24 @@ describe('account re-validation (stale token)', () => {
   });
 });
 
+describe('list pagination', () => {
+  it('returns all seeded tickets with an X-Total-Count header', async () => {
+    const { body } = await login('agent', 'agent-pass');
+    const res = await app.get('/api/tickets', { token: body.token });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.headers.get('x-total-count')).toBe(String(res.body.length));
+  });
+
+  it('bounds results by ?limit while reporting the full count', async () => {
+    const { body } = await login('agent', 'agent-pass');
+    const res = await app.get('/api/tickets?limit=1', { token: body.token });
+    expect(res.body.length).toBe(1);
+    // The header reflects the true total, not the page size.
+    expect(Number(res.headers.get('x-total-count'))).toBeGreaterThan(1);
+  });
+});
+
 describe('tool-action create validation', () => {
   it('400s when idempotency_key is missing from the payload', async () => {
     const { body } = await login('agent', 'agent-pass');
