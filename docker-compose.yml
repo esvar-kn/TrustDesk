@@ -1,13 +1,24 @@
 # Full local stack: MongoDB + API server + client (nginx).
 #
-#   docker compose up -d                       # build + start everything
-#   docker compose run --rm server npm run seed  # seed the database (one-off)
-#   open http://localhost:8080                 # the app (nginx proxies /api → server)
-#   docker compose down                        # stop (data persists in the volume)
-#   docker compose down -v                     # stop and wipe the data volume
+#   docker compose up -d                                    # build + start everything
+#
+#   # First-time setup (production-safe, non-destructive, idempotent):
+#   docker compose run --rm server npm run load-reference   # KB + tool catalog
+#   docker compose run --rm server npm run ensure-admin      # first manager (needs ADMIN_* in .env)
+#   # then log in and create the rest of the staff via the Users Admin UI.
+#
+#   open http://localhost:8080                              # the app (nginx proxies /api → server)
+#   docker compose down                                     # stop (data persists in the volume)
+#   docker compose down -v                                  # stop and wipe the data volume
+#
+#   # Optional demo data (tickets/customers/demo users) for a populated walkthrough.
+#   # DESTRUCTIVE: wipes every collection, and refused under NODE_ENV=production
+#   # unless forced — use only on a throwaway/demo stack:
+#   docker compose run --rm -e NODE_ENV=development server npm run seed
 #
 # Secrets are read from the repo-root .env (copy from .env.example first).
 # AUTH_JWT_SECRET is required — the server fails fast without it in production.
+# ADMIN_USERNAME / ADMIN_PASSWORD back the ensure-admin bootstrap above.
 
 services:
   mongo:
@@ -44,6 +55,9 @@ services:
       DEMO_AGENT_PASSWORD: ${DEMO_AGENT_PASSWORD:-}
       DEMO_MANAGER_PASSWORD: ${DEMO_MANAGER_PASSWORD:-}
       DEMO_AUDITOR_PASSWORD: ${DEMO_AUDITOR_PASSWORD:-}
+      # Bootstrap manager for `npm run ensure-admin` (non-destructive first login).
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
     ports:
       - '4000:4000'

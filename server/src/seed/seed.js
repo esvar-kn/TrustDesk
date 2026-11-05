@@ -33,6 +33,16 @@ const readJsonl = (file) =>
     .map((line) => JSON.parse(line));
 
 async function seed() {
+  // Destructive: this wipes every collection before reloading demo data. Refuse
+  // to run against production unless explicitly forced, so it can never clear a
+  // live database by accident. For prod, use `load-reference` + `ensure-admin`.
+  if (env.NODE_ENV === 'production' && !process.argv.includes('--force')) {
+    throw new Error(
+      'Refusing to run the destructive demo seeder with NODE_ENV=production. ' +
+        'Use `npm run load-reference` and `npm run ensure-admin` instead, or pass --force to override.',
+    );
+  }
+
   if (!env.DEMO_AGENT_PASSWORD || !env.DEMO_MANAGER_PASSWORD) {
     throw new Error('Set DEMO_AGENT_PASSWORD and DEMO_MANAGER_PASSWORD in .env before seeding.');
   }

@@ -11,6 +11,8 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed": "node src/seed/seed.js",
+    "load-reference": "node src/scripts/load-reference.js",
+    "ensure-admin": "node src/scripts/ensure-admin.js",
     "eval": "node scripts/run-evals.js",
     "bench": "node scripts/bench-nonblocking.js",
     "report": "node scripts/write-report.js",
