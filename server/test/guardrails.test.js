@@ -135,10 +135,13 @@ describe('output guard', () => {
     expect(g.decision).toBe('answer');
   });
 
-  it('flags a forbidden "already refunded" promise', () => {
+  it('blocks a forbidden "already refunded" promise: escalates and replaces the body', () => {
     const out = { decision: 'answer', body: 'Your money has been refunded.', citations: ['KB-REFUND-001'], recommended_actions: [] };
     const g = guardDraft(out, baseCtx());
     expect(g.violations).toContain('forbidden_promise');
+    expect(g.decision).toBe('escalate');
+    expect(g.body).not.toMatch(/refunded/i);
+    expect(g.actions.some((a) => a.tool_name === 'escalate_to_human')).toBe(true);
   });
 
   it('escalates an "answer" that has no citation (unsupported)', () => {

@@ -17,10 +17,18 @@ export const toolActionsRouter = Router();
 toolActionsRouter.use(requireAuth);
 toolActionsRouter.use(blockAuditorWrites);
 
+// payload must carry a non-empty idempotency_key: it backs the unique index
+// that makes a repeated request replay instead of creating a second action.
+// Validating it here returns a clean 400 rather than a 500 from the DB layer.
 const createSchema = z.object({
   ticket_id: z.string().min(1),
   tool_name: z.string().min(1),
-  payload: z.record(z.string(), z.any()),
+  payload: z
+    .record(z.string(), z.any())
+    .refine((p) => typeof p.idempotency_key === 'string' && p.idempotency_key.length > 0, {
+      message: 'payload.idempotency_key is required',
+      path: ['idempotency_key'],
+    }),
 });
 
 // POST /api/tool-actions → request an action (any authenticated agent).

@@ -4,6 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { startTestDb, stopTestDb } from './helpers/testDb.js';
 import { seedTestDb } from './helpers/seedTestDb.js';
 import { startApp } from './helpers/httpApp.js';
+import User from '../src/models/User.js';
 
 let app;
 
@@ -97,5 +98,46 @@ describe('requireRole', () => {
     });
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('INVALID_STATE');
+  });
+});
+
+// These mutate the seeded users, so they run last (they use the spare agent2 /
+// manager2 accounts that earlier tests don't touch).
+describe('account re-validation (stale token)', () => {
+  it('401s when the account was deleted after the token was issued', async () => {
+    const { body } = await login('agent2', 'agent2-pass');
+    await User.deleteOne({ username: 'agent2' });
+    const res = await app.get('/api/tool-actions', { token: body.token });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHENTICATED');
+  });
+
+  it('re-reads the role from the DB, not the (now stale) token claim', async () => {
+    const { body } = await login('manager2', 'manager2-pass');
+    // Demote in the DB; the issued token still claims the manager role.
+    await User.updateOne({ username: 'manager2' }, { $set: { role: 'agent' } });
+    const res = await app.post('/api/tool-actions/act_missing/approve', {
+      token: body.token,
+      body: { decision: 'approved' },
+    });
+    // Blocked by the manager gate despite the manager token.
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+  });
+});
+
+describe('tool-action create validation', () => {
+  it('400s when idempotency_key is missing from the payload', async () => {
+    const { body } = await login('agent', 'agent-pass');
+    const res = await app.post('/api/tool-actions', {
+      token: body.token,
+      body: {
+        ticket_id: 'tkt_9001',
+        tool_name: 'create_replacement_order',
+        payload: { order_id: 'ord_5001' },
+      },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 });

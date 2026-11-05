@@ -82,8 +82,19 @@ export function guardDraft(out, ctx) {
     actions = ensureAction(actions, 'escalate_to_human', 'Potential data leak blocked.');
   }
 
-  // 6) Forbidden promise (flag only; body is left to the repair/escalation path).
-  if (PROMISE_RE.test(String(body || ''))) violations.push('forbidden_promise');
+  // 6) Forbidden promise: the model must never claim an action is already done
+  //    (refunded/replaced/shipped/…) — that requires an approved, executed tool
+  //    call. Don't just flag it: replace the body and escalate so the unverified
+  //    claim is never sent. A prior leak-refusal (step 5) already wins, so only
+  //    act when we haven't refused.
+  if (PROMISE_RE.test(String(body || ''))) {
+    violations.push('forbidden_promise');
+    if (decision !== 'refuse') {
+      decision = 'escalate';
+      body = refusalBody();
+      actions = ensureAction(actions, 'escalate_to_human', 'Unverified resolution claim blocked.');
+    }
+  }
 
   // 7) An "answer" with no citation is unsupported → escalate.
   if (decision === 'answer' && citations.length === 0) {
