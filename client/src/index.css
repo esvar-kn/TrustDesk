@@ -156,7 +156,7 @@ button { font: inherit; cursor: pointer; }
 
 /* Icon font + monospace helper for the redesigned UI. */
 .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
+  font-family: 'Material Symbols Outlined Variable', 'Material Symbols Outlined';
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
   font-size: 20px;
   line-height: 1;
