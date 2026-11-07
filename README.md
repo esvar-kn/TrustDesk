@@ -1,6 +1,6 @@
 # TrustDesk — AI Support Operations Console
 
-[![CI](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml) ![Node](https://img.shields.io/badge/Node-22-339933?logo=node.js&logoColor=white) ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-blue)
+[![CI](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml) ![Node](https://img.shields.io/badge/Node-339933?logo=node.js&logoColor=white&style=flat-square) ![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=flat-square) ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black&style=flat-square) ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=flat-square) ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
 TrustDesk is an AI-first customer-support product built around a single promise:
 **every AI decision is grounded, policy-checked, approval-gated, and auditable.**
