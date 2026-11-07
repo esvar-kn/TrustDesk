@@ -1,6 +1,14 @@
-# TrustDesk — AI Support Operations Console
+<h1 align="center">TrustDesk — AI Support Operations Console</h1>
 
-[![CI](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml) ![Node](https://img.shields.io/badge/Node-339933?logo=node.js&logoColor=white&style=flat-square) ![Express](https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=flat-square) ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black&style=flat-square) ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=flat-square) ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+<p align="center">
+  <a href="https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml"><img src="https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml/badge.svg?style=flat-square" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Node-339933?logo=node.js&logoColor=white&style=flat-square" alt="Node">
+  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white&style=flat-square" alt="Express">
+  <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=flat-square" alt="MongoDB">
+  <img src="https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React">
+  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white&style=flat-square" alt="Vite">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
+</p>
 
 TrustDesk is an AI-first customer-support product built around a single promise:
 **every AI decision is grounded, policy-checked, approval-gated, and auditable.**
@@ -76,43 +84,65 @@ jailbreak attempts are scanned, quarantined, and escalated, never executed.
 ## Screenshots
 
 Captured live from the running console (React + Vite client, Express API, real
-LLM provider).
+LLM provider). Click each to expand.
 
-**Agent workspace — triage, grounded draft, recommended action.** The AI
-classifies the ticket (category, priority, sentiment, confidence, escalation),
-drafts a reply grounded in the knowledge base with citations, and proposes an
-approval-gated tool action.
+<details>
+<summary><b>Agent workspace</b> — triage, grounded draft, recommended action</summary>
+
+The AI classifies the ticket (category, priority, sentiment, confidence,
+escalation), drafts a reply grounded in the knowledge base with citations, and
+proposes an approval-gated tool action.
 
 ![Agent workspace](docs/screenshots/02-workspace-triage-draft.jpg)
 
-**Adversarial handling — refuse and escalate, never execute.** A
-secret-exfiltration attempt (`tkt_9007`) raises a SEV-1 security alert; the
+</details>
+
+<details>
+<summary><b>Adversarial handling</b> — refuse and escalate, never execute</summary>
+
+A secret-exfiltration attempt (`tkt_9007`) raises a SEV-1 security alert; the
 system suspends autonomous execution, returns a safe holding reply, and routes
 the ticket to a human.
 
 ![Adversarial escalation](docs/screenshots/03-adversarial-escalation.jpg)
 
-**Approvals — human-gated actions with a full audit trail.** Every tool action
-shows the AI reasoning, the payload, the idempotency key, the policy-governance
-timeline, and a one-click signed audit packet. A manager can never approve their
-own request.
+</details>
+
+<details>
+<summary><b>Approvals</b> — human-gated actions with a full audit trail</summary>
+
+Every tool action shows the AI reasoning, the payload, the idempotency key, the
+policy-governance timeline, and a one-click signed audit packet. A manager can
+never approve their own request.
 
 ![Approvals and audit](docs/screenshots/04-approvals-audit.jpg)
 
-**Evaluations — model quality and guardrail resistance.** The suite scores
-category/priority/citation/escalation metrics and shows each adversarial case as
-SAFE (escalated, disallowed actions blocked, canary not leaked).
+</details>
+
+<details>
+<summary><b>Evaluations</b> — model quality and guardrail resistance</summary>
+
+The suite scores category/priority/citation/escalation metrics and shows each
+adversarial case as SAFE (escalated, disallowed actions blocked, canary not
+leaked).
 
 ![Evaluations](docs/screenshots/05-evaluations.jpg)
 
-**Operations analytics.** Deflection, escalation, median AI latency, approval
-turnaround, draft-decision mix, and tool-action outcomes, derived from live
-tickets, agent runs, and tool actions.
+</details>
+
+<details>
+<summary><b>Operations analytics</b></summary>
+
+Deflection, escalation, median AI latency, approval turnaround, draft-decision
+mix, and tool-action outcomes, derived from live tickets, agent runs, and tool
+actions.
 
 ![Operations analytics](docs/screenshots/06-analytics.jpg)
 
+</details>
+
 <details>
-<summary>Sign-in screen</summary>
+<summary><b>Sign-in screen</b></summary>
 
 ![Login](docs/screenshots/01-login.jpg)
 
