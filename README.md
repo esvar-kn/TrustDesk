@@ -16,17 +16,21 @@ jailbreak attempts are scanned, quarantined, and escalated, never executed.
 ## Contents
 
 - [Architecture](#architecture)
+- [Screenshots](#screenshots)
 - [Quick start (Docker)](#quick-start-docker)
 - [Local development](#local-development)
 - [Environment variables](#environment-variables)
 - [Seeding & provisioning](#seeding--provisioning)
 - [Running evaluations](#running-evaluations)
+- [Demo scenarios](#demo-scenarios)
+- [Added data](#added-data)
 - [API reference](#api-reference)
 - [Guardrails & security](#guardrails--security)
 - [Testing](#testing)
 - [Design decisions](#design-decisions)
 - [Known limitations](#known-limitations)
 - [Repository layout](#repository-layout)
+- [License](#license)
 
 ## Architecture
 
@@ -66,6 +70,51 @@ jailbreak attempts are scanned, quarantined, and escalated, never executed.
 - **Tool actions are idempotent** via unique indexes on `idempotency_key` +
   `payload_hash`; approval (`requireRole('manager')`, no self-approval) and an
   executing-lease make request/approve/execute replay-safe.
+
+## Screenshots
+
+Captured live from the running console (React + Vite client, Express API, real
+LLM provider).
+
+**Agent workspace — triage, grounded draft, recommended action.** The AI
+classifies the ticket (category, priority, sentiment, confidence, escalation),
+drafts a reply grounded in the knowledge base with citations, and proposes an
+approval-gated tool action.
+
+![Agent workspace](docs/screenshots/02-workspace-triage-draft.jpg)
+
+**Adversarial handling — refuse and escalate, never execute.** A
+secret-exfiltration attempt (`tkt_9007`) raises a SEV-1 security alert; the
+system suspends autonomous execution, returns a safe holding reply, and routes
+the ticket to a human.
+
+![Adversarial escalation](docs/screenshots/03-adversarial-escalation.jpg)
+
+**Approvals — human-gated actions with a full audit trail.** Every tool action
+shows the AI reasoning, the payload, the idempotency key, the policy-governance
+timeline, and a one-click signed audit packet. A manager can never approve their
+own request.
+
+![Approvals and audit](docs/screenshots/04-approvals-audit.jpg)
+
+**Evaluations — model quality and guardrail resistance.** The suite scores
+category/priority/citation/escalation metrics and shows each adversarial case as
+SAFE (escalated, disallowed actions blocked, canary not leaked).
+
+![Evaluations](docs/screenshots/05-evaluations.jpg)
+
+**Operations analytics.** Deflection, escalation, median AI latency, approval
+turnaround, draft-decision mix, and tool-action outcomes, derived from live
+tickets, agent runs, and tool actions.
+
+![Operations analytics](docs/screenshots/06-analytics.jpg)
+
+<details>
+<summary>Sign-in screen</summary>
+
+![Login](docs/screenshots/01-login.jpg)
+
+</details>
 
 ## Quick start (Docker)
 
@@ -216,6 +265,57 @@ runs (including a dedicated held-out section), and `npm run bench` measures API
 latency while an eval runs (to show the job queue stays off the request path).
 See [`docs/EVALUATION_GUIDE.md`](docs/EVALUATION_GUIDE.md).
 
+## Demo scenarios
+
+After seeding the demo dataset and signing in, this flow exercises every graded
+behaviour end to end (see the [screenshots](#screenshots) above):
+
+1. **Normal flow — `tkt_9001` (damaged earbuds).** Open the ticket, **Run
+   triage** (category, priority, escalation), then **Draft reply**. The draft is
+   grounded with **citations** (`KB-REFUND-001`, `KB-WARRANTY-001`) and proposes
+   **`create_replacement_order`**.
+2. **Approval-gated action.** Go to **Approvals**. An action is requested through
+   the guarded pipeline; a **manager** (not the requester) approves and executes
+   it. Note the **idempotency key** and the one-click **audit packet**.
+3. **Adversarial — `tkt_9006` / `tkt_9007`.** Open the prompt-injection
+   (hidden-coupon) and secret-exfiltration tickets. The system raises a security
+   alert, returns a **safe holding reply**, **escalates to a human**, and takes
+   **no** unsafe action — the model's output never overrides the guardrails.
+4. **Evaluations.** Open **Evaluations → Run evaluation** (or
+   `npm run eval -- --provider mock`) to score the suite and see the adversarial
+   cases pass as SAFE. CI gates the mock run at `--fail-under 1.0`.
+5. **Analytics.** **Analytics** shows deflection, escalation, median AI latency,
+   and tool-action outcomes derived from the runs above.
+
+Good demo tickets: `tkt_9001` (replacement flow), `tkt_9006` (prompt injection),
+`tkt_9007` (secret exfiltration). The CLI equivalents are under
+[Running evaluations](#running-evaluations); the full demo script is in
+[`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md).
+
+## Added data
+
+The base capstone pack provides the knowledge base, 8 tickets, customers,
+orders, the tool catalog, and the 8 graded eval cases
+([`data/eval_cases.jsonl`](data/eval_cases.jsonl)). Beyond that, this project
+adds:
+
+- **A held-out evaluation set** — [`data/holdout/`](data/holdout/): 4 extra
+  tickets (late-window gold goodwill, overheating-in-warranty, shipping-delay
+  coupon, verified password reset) plus the supporting customers, orders, and
+  eval cases. Their scenarios deliberately cover policy paths the graded cases
+  do not (goodwill exceptions, charger safety, coupon-vs-carrier, a *verified*
+  account change).
+
+**How it affects evaluation.** The held-out cases are tagged `set: "holdout"`
+and are **excluded from the graded metrics and the `--fail-under` CI gate** — the
+runner defaults to `--set graded`. They are scored only on demand (`--set
+holdout` / `--set all`) and reported in their own section of
+[`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md), so they never alter the graded
+numbers. On the deterministic mock they surface an honest generalisation gap
+(e.g. the goodwill case is answered rather than escalated), which is the point of
+a held-out probe. Demo accounts (`agent` / `manager` / optional `auditor`) are
+created by the seeder from `.env` passwords, not committed as data.
+
 ## API reference
 
 All routes are under `/api`; everything except `/health*` and `/auth/login`
@@ -346,7 +446,7 @@ client/           React + Vite SPA (see client/README.md)
 data/             KB docs, tickets, customers, orders, tool catalog, eval cases
 data/holdout/     Held-out set (4 extra tickets + cases, reported apart)
 docs/             API contract, data model, design decisions (ADRs),
-                  evaluation + implementation guides, eval report
+                  evaluation + implementation guides, eval report, screenshots
 planning/         Build-process artifacts (plan, phase breakdown, reviews,
                   Stitch UI export)
 scripts/          Optional Python pack utilities (validate / seed / baseline)
@@ -355,3 +455,7 @@ docker-compose.yml  Full local stack (mongo + server + client)
 
 See [`docs/IMPLEMENTATION_GUIDE.md`](docs/IMPLEMENTATION_GUIDE.md) for the build
 order, demo scenarios, and FAQ.
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Esvar K N.
