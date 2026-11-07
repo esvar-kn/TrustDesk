@@ -45,25 +45,27 @@ jailbreak attempts are scanned, quarantined, and escalated, never executed.
 ## Architecture
 
 ```
-┌────────────┐      /api (JWT)      ┌──────────────────────────────────────┐
-│  Client    │  ───────────────▶   │  Express API (server/)                │
-│  React+Vite│                     │                                        │
-│  (nginx in │   ◀───────────────  │  auth · tickets · documents            │
-│   prod)    │     JSON            │  agent-runs · tool-actions · eval-runs │
-└────────────┘                     │  analytics · users · notifications     │
-                                   │                                        │
-                                   │  ┌── pipeline ──────────────────────┐  │
-                                   │  │ input scan → retrieval (+quaran-  │  │
-                                   │  │ tine) → policy engine → prompt →  │  │
-                                   │  │ provider → output guard → trace   │  │
-                                   │  └───────────────────────────────────┘ │
-                                   └───────────────┬────────────────────────┘
-                                                   │
-                        ┌──────────────────────────┼───────────────────┐
-                        ▼                           ▼                   ▼
-                   MongoDB                   LLM provider          in-process
-               (tickets, runs,          (mock | anthropic |        job queue
-                actions, KB, …)          openai | google | groq)   (evals)
+┌──────────────┐                     ┌────────────────────────────────────────────┐
+│ Client       │   /api (JWT)        │ Express API (server/)                      │
+│ React + Vite │  ──────────▶        │                                            │
+│ nginx in prod│  ◀──────────        │ auth · tickets · documents                 │
+└──────────────┘      JSON           │ agent-runs · tool-actions · eval-runs      │
+                                     │ analytics · users · notifications          │
+                                     │                                            │
+                                     │ ┌── pipeline ────────────────────────────┐ │
+                                     │ │ input scan → retrieval (+quarantine) → │ │
+                                     │ │ policy engine → prompt → provider →    │ │
+                                     │ │ output guard → trace                   │ │
+                                     │ └────────────────────────────────────────┘ │
+                                     └─────────────────────┬──────────────────────┘
+                                                           │
+                ┌─────────────────────────────┬────────────┴─────────────────┐
+                ▼                             ▼                              ▼
+        ┌───────────────┐        ┌────────────────────────┐        ┌──────────────────┐
+        │ MongoDB       │        │ LLM provider           │        │ in-process       │
+        │ tickets, runs,│        │ mock · anthropic ·     │        │ job queue (evals)│
+        │ actions, KB, …│        │ openai · google · groq │        └──────────────────┘
+        └───────────────┘        └────────────────────────┘
 ```
 
 - **Rules decide, the model drafts.** A deterministic policy engine computes
