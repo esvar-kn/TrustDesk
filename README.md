@@ -1,5 +1,7 @@
 # TrustDesk — AI Support Operations Console
 
+[![CI](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/esvar-kn/TrustDesk/actions/workflows/ci.yml)
+
 TrustDesk is an AI-first customer-support product built around a single promise:
 **every AI decision is grounded, policy-checked, approval-gated, and auditable.**
 An agent triages a ticket, drafts a reply grounded in the knowledge base with
