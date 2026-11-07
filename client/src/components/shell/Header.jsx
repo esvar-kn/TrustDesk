@@ -44,13 +44,13 @@ export default function Header({ user, onLogout, view, onNavigate, query, onQuer
 
   return (
     <header className="sticky top-0 z-40 h-14 bg-surface/95 backdrop-blur border-b border-rule shadow-card">
-      <div className="relative h-full max-w-7xl mx-auto px-space-md sm:px-margin flex items-center justify-between gap-space-sm">
+      <div className="h-full px-space-md sm:px-margin grid grid-cols-[1fr_auto_1fr] items-center gap-space-sm sm:gap-space-md">
         <div className="flex items-center gap-space-sm shrink-0">
           <img src="/logo-128.png" alt="TrustDesk" className="h-8 w-8 rounded-lg" />
           <span className="hidden sm:block text-headline-lg font-bold tracking-tight">TrustDesk</span>
         </div>
 
-        <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-space-2xs sm:gap-space-xs">
+        <nav className="min-w-0 flex items-center justify-center gap-space-2xs sm:gap-space-xs overflow-x-auto">
             {NAV.filter((n) => !n.roles || n.roles.includes(user?.role)).map((n) => {
               const active = view === n.id;
               return (
@@ -71,25 +71,20 @@ export default function Header({ user, onLogout, view, onNavigate, query, onQuer
             })}
         </nav>
 
-        <div className="flex items-center gap-space-sm sm:gap-space-md shrink-0">
-          <div className="hidden xl:flex items-center gap-space-sm h-9 px-space-md rounded-lg bg-surface-container-low border border-transparent focus-within:border-focus-ring focus-within:bg-surface-container-lowest transition-colors">
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
+        <div className="flex items-center justify-end gap-space-sm sm:gap-space-md min-w-0">
+          <div className="hidden lg:flex flex-1 min-w-0 max-w-[16rem] items-center gap-space-sm h-9 px-space-md rounded-lg bg-surface-container-low border border-transparent focus-within:border-focus-ring focus-within:bg-surface-container-lowest transition-colors">
+            <span className="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">search</span>
             <input
               ref={searchRef}
               value={query}
               onChange={(e) => onQuery(e.target.value)}
               placeholder="Search tickets, IDs, customers"
-              className="bg-transparent outline-none text-body-sm w-44 text-on-surface placeholder:text-outline"
+              className="bg-transparent outline-none text-body-sm w-full min-w-0 text-on-surface placeholder:text-outline"
             />
-            <kbd className="mono text-code-sm px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant">
+            <kbd className="hidden 2xl:inline-block shrink-0 mono text-code-sm px-space-xs py-space-2xs rounded bg-surface-container-highest text-on-surface-variant">
               ⌘K
             </kbd>
           </div>
-
-          <span className="hidden 2xl:flex items-center gap-space-xs px-space-sm py-space-2xs rounded bg-surface-container-low">
-            <span className="h-2 w-2 rounded-full bg-primary-container" />
-            <span className="mono text-code-sm text-on-surface">Guardrails Active</span>
-          </span>
 
           <NotificationsBell onOpenTicket={onOpenTicket} />
 
