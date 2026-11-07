@@ -1,6 +1,9 @@
 // CLI eval runner.
 //   node scripts/run-evals.js [--provider mock|groq|…] [--repeat N]
 //                             [--out path.json] [--fail-under 1.0]
+//                             [--set graded|holdout|all]
+// --set selects the eval-case set (default graded; holdout is reported apart
+// from the gated cases).
 import fs from 'node:fs';
 import path from 'node:path';
 import { env } from '../src/config/env.js';
@@ -19,6 +22,7 @@ function parseArgs(argv) {
     else if (a === '--repeat') args.repeat = parseInt(argv[++i], 10);
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--fail-under') args.failUnder = parseFloat(argv[++i]);
+    else if (a === '--set') args.set = argv[++i];
   }
   return args;
 }
@@ -36,17 +40,19 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const providerName = args.provider || env.LLM_PROVIDER;
   const repeat = Number.isInteger(args.repeat) && args.repeat > 0 ? args.repeat : 1;
+  const set = ['graded', 'holdout', 'all'].includes(args.set) ? args.set : 'graded';
 
   await connectDb();
-  logger.info(`running eval: provider=${providerName} repeat=${repeat}`);
+  logger.info(`running eval: provider=${providerName} repeat=${repeat} set=${set}`);
 
-  const result = await runEval({ providerName, repeat });
+  const result = await runEval({ providerName, repeat, set });
   const eval_run_id = newId('eval');
 
   await EvalRun.create({
     eval_run_id,
     status: 'completed',
     provider: providerName,
+    set,
     total_cases: result.case_results.length,
     metrics: result.metrics,
     case_results: result.case_results,

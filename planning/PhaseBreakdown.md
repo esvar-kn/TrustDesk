@@ -256,7 +256,7 @@ Legend: ✅ = verification / done-check.
 ## Phase 7 · Frontend Redesign — Audit-First Console (~7.5 h)
 
 **Goal:** reskin and restructure the React client to the Stitch "AI Operations Console" design
-(`docs-user/stitch_trustdesk_ai_operations_console/`), with every wired behaviour and backend
+(`planning/stitch_trustdesk_ai_operations_console/`), with every wired behaviour and backend
 contract preserved and all widgets functional.
 **Milestone:** the full demo flow (login → triage/draft → request → approve + execute → trace →
 evals) runs end-to-end on the new UI against live Atlas, with **no** server/API change.

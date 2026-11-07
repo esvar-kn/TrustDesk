@@ -189,21 +189,32 @@ the Users admin UI. Use `seed` only on throwaway/demo stacks.
 ## Running evaluations
 
 The eval runner scores the cases in [`data/eval_cases.jsonl`](data/eval_cases.jsonl)
-(8 cases covering answer quality, citations, routing, and guardrails) against a
-provider.
+(8 graded cases covering answer quality, citations, routing, and guardrails)
+against a provider.
 
 ```bash
 cd server
 LLM_PROVIDER=mock npm run eval                       # quick, offline
 npm run eval -- --provider groq --repeat 3 --out docs/eval/live.json
 npm run eval -- --fail-under 1.0                     # CI gate
+npm run eval -- --provider mock --set holdout        # held-out set only
 ```
 
-Flags: `--provider`, `--repeat N`, `--out path.json`, `--fail-under X`.
+Flags: `--provider`, `--repeat N`, `--out path.json`, `--fail-under X`,
+`--set graded|holdout|all`.
+
+**Held-out set.** [`data/holdout/`](data/holdout/) holds 4 extra tickets
+(late-window gold goodwill, overheating-in-warranty, shipping-delay coupon,
+verified password reset) that are **not** part of the 8 graded cases. They probe
+generalisation on scenarios the rules were not tuned against, are **excluded
+from the `--fail-under` gate** (`--set graded`, the default, skips them), and are
+reported separately in the eval report. Run them with `--set holdout`, or `--set
+all` for both together.
+
 `npm run report` writes [`docs/EVAL_REPORT.md`](docs/EVAL_REPORT.md) from recorded
-runs, and `npm run bench` measures API latency while an eval runs (to show the
-job queue stays off the request path). See
-[`docs/EVALUATION_GUIDE.md`](docs/EVALUATION_GUIDE.md).
+runs (including a dedicated held-out section), and `npm run bench` measures API
+latency while an eval runs (to show the job queue stays off the request path).
+See [`docs/EVALUATION_GUIDE.md`](docs/EVALUATION_GUIDE.md).
 
 ## API reference
 
@@ -306,9 +317,12 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs pack validation
 4. **In-process job queue** (`p-limit`) for evals keeps them off the request
    path without adding an external broker.
 
+Each decision is written up as a full record — context, trade-off, and where it
+lives in the code — in [`docs/DESIGN.md`](docs/DESIGN.md).
+
 The UI design system (Material-3 tokens, audit-first light/dark theme) is
 documented in
-[`docs-user/stitch_trustdesk_ai_operations_console/trustdesk/DESIGN.md`](docs-user/stitch_trustdesk_ai_operations_console/trustdesk/DESIGN.md).
+[`planning/stitch_trustdesk_ai_operations_console/trustdesk/DESIGN.md`](planning/stitch_trustdesk_ai_operations_console/trustdesk/DESIGN.md).
 
 ## Known limitations
 
@@ -330,9 +344,11 @@ server/           Express API, services (ai, retrieval, policy, guardrails,
                   tools, evals, analytics, compliance), models, tests
 client/           React + Vite SPA (see client/README.md)
 data/             KB docs, tickets, customers, orders, tool catalog, eval cases
-docs/             API contract, data model, evaluation + implementation guides,
-                  eval report
-docs-user/        Design artifacts (Stitch UI export, phase breakdown, reviews)
+data/holdout/     Held-out set (4 extra tickets + cases, reported apart)
+docs/             API contract, data model, design decisions (ADRs),
+                  evaluation + implementation guides, eval report
+planning/         Build-process artifacts (plan, phase breakdown, reviews,
+                  Stitch UI export)
 scripts/          Optional Python pack utilities (validate / seed / baseline)
 docker-compose.yml  Full local stack (mongo + server + client)
 ```

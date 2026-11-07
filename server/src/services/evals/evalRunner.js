@@ -1,5 +1,9 @@
-// Eval runner: for each of the 8 eval cases, run triage + draft through the
-// pipeline (with the chosen provider), score the result, and aggregate metrics.
+// Eval runner: for each eval case in the selected set, run triage + draft
+// through the pipeline (with the chosen provider), score the result, and
+// aggregate metrics. `set` picks which cases to run:
+//   'graded'  (default) — the gated cases (anything not marked holdout)
+//   'holdout'           — only the held-out cases, reported apart
+//   'all'               — graded + held-out together
 import { env } from '../../config/env.js';
 import Ticket from '../../models/Ticket.js';
 import EvalCase from '../../models/EvalCase.js';
@@ -46,9 +50,11 @@ async function scoreCase(caseDef, provider) {
   };
 }
 
-export async function runEval({ providerName = env.LLM_PROVIDER, repeat = 1 } = {}) {
+export async function runEval({ providerName = env.LLM_PROVIDER, repeat = 1, set = 'graded' } = {}) {
   const provider = getProvider(providerName);
-  const cases = await EvalCase.find().sort({ case_id: 1 }).lean();
+  const filter =
+    set === 'all' ? {} : set === 'holdout' ? { set: 'holdout' } : { set: { $ne: 'holdout' } };
+  const cases = await EvalCase.find(filter).sort({ case_id: 1 }).lean();
   const started_at = new Date();
 
   const perRun = [];
@@ -64,6 +70,7 @@ export async function runEval({ providerName = env.LLM_PROVIDER, repeat = 1 } = 
     provider: providerName,
     model: env.LLM_MODEL || providerName,
     repeat,
+    set,
     started_at,
     completed_at: new Date(),
     metrics: averageMetrics(perRun),

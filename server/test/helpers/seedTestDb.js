@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 
 import * as M from '../../src/models/index.js';
 import { parseKbDir } from '../../src/seed/parseKb.js';
+import { loadHoldout } from '../../src/seed/loadHoldout.js';
 import { registry } from '../../src/services/tools/registry.js';
 import { resetCategoryDocMap } from '../../src/services/retrieval/retriever.js';
 import { DATA_DIR, readJson, readJsonl } from './data.js';
@@ -51,8 +52,19 @@ export async function seedTestDb() {
     ticket_id: c.ticket_id,
     input: c.input,
     expected: c.expected,
+    set: 'graded',
   }));
   await M.EvalCase.insertMany(cases);
+
+  // Held-out set (optional): scored apart from the graded cases.
+  const holdout = loadHoldout(DATA_DIR);
+  if (holdout.present) {
+    if (holdout.customers.length) await M.Customer.insertMany(holdout.customers);
+    if (holdout.orders.length) await M.Order.insertMany(holdout.orders);
+    if (holdout.tickets.length) await M.Ticket.insertMany(holdout.tickets);
+    if (holdout.labels.length) await M.SeedLabel.insertMany(holdout.labels);
+    if (holdout.cases.length) await M.EvalCase.insertMany(holdout.cases);
+  }
 
   await M.ToolCatalog.insertMany(readJson('tool_actions.json'));
 

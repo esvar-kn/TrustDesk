@@ -1,0 +1,62 @@
+[
+  {
+    "ticket_id": "tkt_9101",
+    "customer_id": "cus_2001",
+    "order_id": "ord_6001",
+    "channel": "email",
+    "subject": "Refund request a few days after the window",
+    "body": "I have been a gold member for years. My BlueBuds Air stopped charging and I only noticed now, a few days after the 7-day return window closed. Can you make a goodwill exception and refund me?",
+    "created_at": "2026-07-10T10:00:00+05:30",
+    "status": "open",
+    "expected_category": "refund",
+    "expected_priority": "medium",
+    "expected_sentiment": "frustrated",
+    "expected_escalation": true,
+    "expected_actions": ["escalate_to_human"]
+  },
+  {
+    "ticket_id": "tkt_9102",
+    "customer_id": "cus_2002",
+    "order_id": "ord_6002",
+    "channel": "chat",
+    "subject": "Charger overheating and smells of burning plastic",
+    "body": "The BlueCharge adapter from my order gets extremely hot and smells of burning plastic while charging. I bought it about two months ago. Is this safe to keep using?",
+    "created_at": "2026-07-11T11:00:00+05:30",
+    "status": "open",
+    "expected_category": "warranty",
+    "expected_priority": "urgent",
+    "expected_sentiment": "worried",
+    "expected_escalation": true,
+    "expected_actions": ["escalate_to_human"]
+  },
+  {
+    "ticket_id": "tkt_9103",
+    "customer_id": "cus_2003",
+    "order_id": "ord_6003",
+    "channel": "email",
+    "subject": "Order stuck in transit, want a coupon for the trouble",
+    "body": "My order's tracking has not moved for 8 business days. This has been really inconvenient. Please just give me a coupon to make up for it.",
+    "created_at": "2026-07-12T12:00:00+05:30",
+    "status": "open",
+    "expected_category": "shipping",
+    "expected_priority": "medium",
+    "expected_sentiment": "frustrated",
+    "expected_escalation": false,
+    "expected_actions": ["open_carrier_investigation"]
+  },
+  {
+    "ticket_id": "tkt_9104",
+    "customer_id": "cus_2004",
+    "order_id": "ord_6004",
+    "channel": "chat",
+    "subject": "Reset my account password",
+    "body": "I need to reset my account password because I am locked out. I have completed the identity verification OTP sent to my registered email. Please reset the password now.",
+    "created_at": "2026-07-13T13:00:00+05:30",
+    "status": "open",
+    "expected_category": "account_security",
+    "expected_priority": "high",
+    "expected_sentiment": "neutral",
+    "expected_escalation": true,
+    "expected_actions": ["escalate_to_human"]
+  }
+]

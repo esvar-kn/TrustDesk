@@ -7,6 +7,7 @@ const evalRunSchema = new Schema(
     eval_run_id: { type: String, required: true, unique: true },
     status: { type: String, default: 'queued' }, // queued | running | completed | failed
     provider: String,
+    set: String, // which eval-case set was run: graded | holdout | all
     total_cases: Number,
     metrics: { type: Schema.Types.Mixed, default: {} },
     case_results: { type: [Schema.Types.Mixed], default: [] },

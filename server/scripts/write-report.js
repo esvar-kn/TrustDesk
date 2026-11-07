@@ -99,6 +99,25 @@ function ablationTable(baseline, scannerOff, guardOff) {
   return lines.join('\n');
 }
 
+function holdoutSection(holdout) {
+  if (!holdout || !holdout.case_results.length) {
+    return '> No held-out cases found (`data/holdout/eval_cases.jsonl`). This set is optional.';
+  }
+  return [
+    `The held-out set is **${holdout.metrics.cases} extra tickets** — late-window gold goodwill, overheating-in-warranty, shipping-delay coupon, and a verified password reset. They are **not** part of the graded cases and are **excluded from the \`--fail-under\` gate**; they probe generalisation on scenarios the policy rules were not tuned against.`,
+    '',
+    '### Metrics (mock)',
+    '',
+    metricsTable(holdout.metrics),
+    '',
+    '### Per-case results (mock)',
+    '',
+    perCaseTable(holdout.case_results),
+    '',
+    'Run this set directly with `npm --prefix server run eval -- --provider mock --set holdout` (or `--set all` for graded + held-out together).',
+  ].join('\n');
+}
+
 function benchSection(bench) {
   if (!bench) {
     return [
@@ -168,6 +187,9 @@ async function main() {
   const scannerOff = await runAblation({ providerName: 'mock', scanner: false, guard: true });
   const guardOff = await runAblation({ providerName: 'mock', scanner: true, guard: false });
 
+  // Held-out set (reported apart from the graded baseline, never gated).
+  const holdout = await runEval({ providerName: 'mock', repeat: 1, set: 'holdout' });
+
   const bench = readJsonIf(path.join(EVAL_DIR, 'bench.json'));
   const liveRuns = fs.existsSync(EVAL_DIR)
     ? fs
@@ -193,6 +215,7 @@ TrustDesk's guiding principle is **"the LLM proposes, deterministic code decides
 - **Gated metrics (mock):** ${gatedPass ? '✅ all at 1.000' : '⚠️ see table'} — the \`--fail-under 1.0\` CI gate.
 - **Non-blocking:** ${bench ? (bench.pass ? '✅ event loop stays responsive under eval load' : '❌ see below') : 'TODO (bench not captured)'}.
 - **Ablations:** removing the input scanner measurably drops answer-requirement coverage on the injection cases; the output guard is a safety net the well-behaved mock never trips (its value shows on live/adversarial inputs).
+- **Held-out set:** ${holdout.case_results.length} extra tickets scored apart from the gated cases — see [Held-out set](#held-out-set).
 
 Gated metrics (the \`--fail-under\` set) are the deterministic pipeline-correctness measures. Triage category/priority accuracy reflect model quality and are reported but **not** gated (the mock is a keyword stub, not a real model).
 
@@ -211,6 +234,10 @@ The three adversarial cases (${ADVERSARIAL.join(', ')} — prompt injection, ove
 ${adversarialSection(baseline.case_results)}
 
 These guarantees do not depend on the model behaving: the policy engine denies the sensitive tools and the output guard strips any that slip through, injects \`KB-SECURITY-001\`, and refuses on any canary/secret/email leak.
+
+## Held-out set
+
+${holdoutSection(holdout)}
 
 ## Ablations
 
@@ -246,6 +273,9 @@ ${liveSection(liveRuns)}
 # Mock eval + gate (what CI runs)
 npm --prefix server run eval -- --provider mock --fail-under 1.0
 
+# Held-out set (reported apart from the gated cases)
+npm --prefix server run eval -- --provider mock --set holdout
+
 # Non-blocking bench
 npm --prefix server run bench -- --provider mock --repeat 3 --out docs/eval/bench.json
 
@@ -260,6 +290,7 @@ npm --prefix server run report
   console.log(`  baseline gated pass: ${gatedPass}`);
   console.log(`  bench: ${bench ? (bench.pass ? 'PASS' : 'FAIL') : 'not captured'}`);
   console.log(`  live runs folded in: ${liveRuns.length}`);
+  console.log(`  held-out cases: ${holdout.case_results.length}`);
 
   await mongoose.disconnect();
   await mem.stop();

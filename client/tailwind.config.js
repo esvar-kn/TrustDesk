@@ -1,4 +1,4 @@
-/** TrustDesk "Audit-First" design tokens (from docs-user/stitch_.../trustdesk/DESIGN.md).
+/** TrustDesk "Audit-First" design tokens (from planning/stitch_.../trustdesk/DESIGN.md).
  *  Everything is added via `extend` so the full default Tailwind scale still works
  *  (h-14, px-8, …) alongside the design's semantic tokens (gap-space-md, px-margin,
  *  text-code-sm, bg-surface, …).

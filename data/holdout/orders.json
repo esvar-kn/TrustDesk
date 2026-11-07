@@ -1,0 +1,62 @@
+[
+  {
+    "order_id": "ord_6001",
+    "customer_id": "cus_2001",
+    "status": "delivered",
+    "placed_at": "2026-06-01",
+    "delivered_at": "2026-06-05",
+    "eligible_return_until": "2026-06-12",
+    "total": 8999,
+    "currency": "INR",
+    "payment_status": "paid",
+    "tracking_number": "BLUETRK20001",
+    "items": [
+      {"sku": "BG-AIRPODS-01", "name": "BlueBuds Air", "quantity": 1, "category": "audio", "final_sale": false}
+    ]
+  },
+  {
+    "order_id": "ord_6002",
+    "customer_id": "cus_2002",
+    "status": "delivered",
+    "placed_at": "2026-05-01",
+    "delivered_at": "2026-05-05",
+    "eligible_return_until": "2026-05-12",
+    "total": 3499,
+    "currency": "INR",
+    "payment_status": "paid",
+    "tracking_number": "BLUETRK20002",
+    "items": [
+      {"sku": "BG-CHARGE-65", "name": "BlueCharge 65W Adapter", "quantity": 1, "category": "electronics", "final_sale": false}
+    ]
+  },
+  {
+    "order_id": "ord_6003",
+    "customer_id": "cus_2003",
+    "status": "in_transit",
+    "placed_at": "2026-07-03",
+    "delivered_at": null,
+    "eligible_return_until": null,
+    "total": 2499,
+    "currency": "INR",
+    "payment_status": "paid",
+    "tracking_number": "BLUETRK20003",
+    "items": [
+      {"sku": "BG-CASE-14", "name": "Phone Case Pro", "quantity": 1, "category": "accessory", "final_sale": false}
+    ]
+  },
+  {
+    "order_id": "ord_6004",
+    "customer_id": "cus_2004",
+    "status": "delivered",
+    "placed_at": "2026-06-15",
+    "delivered_at": "2026-06-19",
+    "eligible_return_until": "2026-06-26",
+    "total": 15999,
+    "currency": "INR",
+    "payment_status": "paid",
+    "tracking_number": "BLUETRK20004",
+    "items": [
+      {"sku": "BG-WATCH-04", "name": "BlueWatch Sport", "quantity": 1, "category": "wearable", "final_sale": false}
+    ]
+  }
+]

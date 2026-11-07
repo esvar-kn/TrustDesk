@@ -11,6 +11,9 @@ const evalCaseSchema = new Schema(
     ticket_id: { type: String, index: true },
     input: String,
     expected: { type: Schema.Types.Mixed, default: {} },
+    // 'graded' = the gated cases; 'holdout' = extra cases scored and reported
+    // apart from the graded set and excluded from the --fail-under gate.
+    set: { type: String, enum: ['graded', 'holdout'], default: 'graded', index: true },
   },
   { collection: 'eval_cases' },
 );

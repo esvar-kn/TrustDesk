@@ -267,7 +267,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:4000/api/eval-runs -H
 
 ### Phase 7 · Frontend redesign — audit-first console (\~7.5 h)
 
-**Goal:** reskin and restructure the React client to the Stitch "AI Operations Console" design in `docs-user/stitch_trustdesk_ai_operations_console/` — Material-3 tokens, IBM Plex Sans + JetBrains Mono, a warm audit-first light theme — with every wired behaviour and backend contract preserved and all widgets functional. **Milestone:** the full demo flow (login → triage/draft → request → approve + execute → trace → evals) runs end-to-end on the new UI, with no server/API change.
+**Goal:** reskin and restructure the React client to the Stitch "AI Operations Console" design in `planning/stitch_trustdesk_ai_operations_console/` — Material-3 tokens, IBM Plex Sans + JetBrains Mono, a warm audit-first light theme — with every wired behaviour and backend contract preserved and all widgets functional. **Milestone:** the full demo flow (login → triage/draft → request → approve + execute → trace → evals) runs end-to-end on the new UI, with no server/API change.
 
 - [ ] Theme foundation: Tailwind locally (not the export's CDN) with the design's config; fonts/icons; new app shell, light theme (7.0).
 - [ ] Rebuild login, app shell + nav (Approvals becomes a top-level page, trace becomes a drawer), workspace queue + ticket detail (7.1–7.3).

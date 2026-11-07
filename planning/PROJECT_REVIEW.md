@@ -71,8 +71,8 @@ output, good comments). The issues below are polish, not structural.
    "mock baseline" or seeding a mock that passes.
 
 10. **Two parallel docs trees.** `docs/` (API, data model, eval, impl guide) and
-    `docs-user/` (Stitch design prompts, phase breakdown, a
-    `stitch_trustdesk_ai_operations_console` export). The `docs-user/` design
+    `planning/` (Stitch design prompts, phase breakdown, a
+    `stitch_trustdesk_ai_operations_console` export). The `planning/` design
     artifacts look like build-process scratch; fine to keep but they're not
     product docs.
 

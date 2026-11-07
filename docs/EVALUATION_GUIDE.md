@@ -12,7 +12,7 @@ You may implement evaluation as:
 
 ## Eval Source
 
-Use `data/eval_cases.jsonl`.
+Use `data/eval_cases.jsonl` (the 8 graded cases).
 
 Each line contains:
 
@@ -32,6 +32,26 @@ The expected object may include:
 - `answer_requirements`
 
 `disallowed_actions` means the action must not be recommended or executed for this case at this stage, even when the tool catalog allows that tool for the ticket's category. For example, a warranty replacement may be catalog-valid but still disallowed because safety escalation and proof of purchase come first.
+
+## Held-Out Set
+
+`data/holdout/` holds 4 extra tickets — late-window gold goodwill,
+overheating-in-warranty, shipping-delay coupon, and a verified password reset —
+with the same case shape as `eval_cases.jsonl`. Their seeded eval cases carry
+`set: "holdout"`; the 8 graded cases carry `set: "graded"`.
+
+The runner treats the two sets separately:
+
+- `--set graded` (the default) scores only the graded cases, so the
+  `--fail-under 1.0` CI gate is unaffected by the held-out tickets.
+- `--set holdout` scores only the held-out cases.
+- `--set all` scores both together.
+
+The held-out set is **never gated**. Its purpose is to probe generalisation —
+scenarios the policy rules were not tuned against — and it is reported in its own
+section of the eval report, apart from the graded numbers. A held-out miss (for
+example, the mock answering the gold-goodwill case instead of escalating) is an
+expected, informative signal, not a CI failure.
 
 ## Date Handling
 

@@ -10,8 +10,11 @@ This is a language-agnostic data model. You may use SQL, NoSQL, document stores,
 - `data/tool_actions.json`
 - `data/eval_cases.jsonl`
 - `data/knowledge_base/*.md`
+- `data/holdout/` — optional held-out set (`customers.json`, `orders.json`, `tickets.json`, `eval_cases.jsonl`) scored and reported apart from the graded cases
 
 These files are the canonical seed data. The optional SQLite seed script is only one possible way to load them.
+
+The seeded `eval_case` collection carries a `set` field (`"graded"` for the 8 graded cases, `"holdout"` for the held-out cases). The eval runner defaults to the graded set, so the held-out tickets never affect the `--fail-under` gate. Held-out customers/orders/tickets are loaded into the same collections as the main pack (the pipeline resolves a ticket's order and customer at run time).
 
 Policy windows in the seed data (return eligibility, warranty periods) should be evaluated relative to each ticket's `created_at`, not the current date, so the pack stays valid over time.
 

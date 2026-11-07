@@ -15,6 +15,7 @@ import { logger } from '../config/logger.js';
 import { connectDb, disconnectDb } from '../db/connect.js';
 import * as M from '../models/index.js';
 import { parseKbDir } from './parseKb.js';
+import { loadHoldout } from './loadHoldout.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 // Repo data dir: server/src/seed -> repo root is three up, then /data.
@@ -91,8 +92,20 @@ async function seed() {
     ticket_id: c.ticket_id,
     input: c.input,
     expected: c.expected,
+    set: 'graded',
   }));
   await M.EvalCase.insertMany(cases);
+
+  // --- Held-out set (optional): extra tickets + cases scored apart from the
+  //     graded set and excluded from the --fail-under gate (data/holdout/). ---
+  const holdout = loadHoldout(dataDir);
+  if (holdout.present) {
+    if (holdout.customers.length) await M.Customer.insertMany(holdout.customers);
+    if (holdout.orders.length) await M.Order.insertMany(holdout.orders);
+    if (holdout.tickets.length) await M.Ticket.insertMany(holdout.tickets);
+    if (holdout.labels.length) await M.SeedLabel.insertMany(holdout.labels);
+    if (holdout.cases.length) await M.EvalCase.insertMany(holdout.cases);
+  }
 
   // --- Tool catalog ---
   await M.ToolCatalog.insertMany(readJson('tool_actions.json'));
@@ -127,6 +140,7 @@ async function seed() {
     tickets: await M.Ticket.countDocuments(),
     seed_labels: await M.SeedLabel.countDocuments(),
     eval_cases: await M.EvalCase.countDocuments(),
+    holdout_cases: await M.EvalCase.countDocuments({ set: 'holdout' }),
     tool_catalog: await M.ToolCatalog.countDocuments(),
     knowledge_documents: await M.KnowledgeDocument.countDocuments(),
     kb_chunks: await M.KbChunk.countDocuments(),
